@@ -1,0 +1,163 @@
+# API Keys and Secrets
+.env
+.env.local
+.env.production
+.env.staging
+*.key
+*_key.txt
+*_keys.txt
+api_keys.txt
+secrets.txt
+
+# Environment Variables
+.envrc
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+log/
+
+# Test Results and Coverage
+.coverage
+.pytest_cache/
+.tox/
+.nox/
+htmlcov/
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Downloaded Images and Datasets
+datasets/*/images/*.jpg
+datasets/*/images/*.jpeg
+datasets/*/images/*.png
+datasets/*/images/*.webp
+datasets/*/images/*.bmp
+datasets/*/images/*.tiff
+datasets/*/images/*.gif
+
+# Generated Files
+*.jsonl
+*_results.txt
+*_urls.txt
+search_results.txt
+classification_results.jsonl
+image_labels.jsonl
+
+# Temporary Files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (if any frontend components)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# Large Files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Model Files
+*.pkl
+*.pickle
+*.model
+*.h5
+*.pt
+*.pth
+
+# Configuration Files with Sensitive Data
+config.ini
+config.json
+settings.json
+credentials.json
+
+# Test Output
+test_output/
+test_results/
+test_images/
+
+# Documentation Build
+docs/_build/
+site/
+
+# Cache
+.cache/
+*.cache
+
+# Specific to this project
+brazil_id_search_results.txt
+brazil_id_urls.txt
+PROPER_SEARCH_API_TEST.md
+SEARCH_API_TEST_SUMMARY.md 

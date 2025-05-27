@@ -52,34 +52,35 @@ class GPT4VImageLabeler:
         
         # Build classification prompt
         prompt = """
-        请对这张图像进行精细分类，用于OCR_DLP系统性能测试。请返回JSON格式的分类标签：
+        Please classify this image for OCR_DLP system performance testing. Return classification labels in JSON format:
 
         {
-            "document_category": "文档主类别（如：发票、收据、身份证、护照、驾照、银行卡、合同、证书等）",
-            "document_subcategory": "文档子类别（如：GST发票、商业发票、餐厅收据、出租车收据、身份证正面、身份证背面等）",
-            "language_primary": "主要语言（如：英语、中文、印地语、泰米尔语、阿拉伯语等）",
-            "language_secondary": "次要语言（如果有多语言）",
-            "text_density": "文本密度（密集/中等/稀疏）",
-            "text_clarity": "文本清晰度（清晰/模糊/部分模糊）",
-            "image_quality": "图像质量（高/中/低）",
-            "orientation": "图像方向（正向/旋转90度/旋转180度/旋转270度/倾斜）",
-            "background_complexity": "背景复杂度（简单/中等/复杂）",
-            "ocr_difficulty": "OCR难度等级（简单/中等/困难/极困难）",
-            "sensitive_data_types": ["敏感数据类型列表（如：姓名、身份证号、银行卡号、地址、电话等）"],
-            "layout_type": "版面类型（表格/列表/段落/混合/手写）",
-            "special_features": ["特殊特征（如：水印、印章、签名、条码、二维码、logo等）"],
-            "testing_scenarios": ["适用测试场景（如：身份验证、财务审计、合规检查、数据提取等）"],
-            "challenge_factors": ["挑战因素（如：字体小、背景干扰、光照不均、倾斜、模糊、多语言等）"],
-            "confidence_score": "分类置信度(0-1)",
-            "recommended_preprocessing": ["建议预处理步骤（如：去噪、矫正、增强对比度等）"]
+            "document_category": "Main document type (e.g., invoice, receipt, identity_card, passport, driver_license, bank_card, contract, certificate, etc.)",
+            "document_subcategory": "Document subcategory (e.g., GST_invoice, commercial_invoice, restaurant_receipt, taxi_receipt, id_card_front, id_card_back, etc.)",
+            "language_primary": "Primary language (e.g., English, Chinese, Hindi, Tamil, Arabic, Portuguese, Spanish, etc.)",
+            "language_secondary": "Secondary language (if multilingual document)",
+            "text_density": "Text density (dense/medium/sparse)",
+            "text_clarity": "Text clarity (clear/blurry/partially_blurry)",
+            "image_quality": "Image quality (high/medium/low)",
+            "orientation": "Image orientation (upright/rotated_90/rotated_180/rotated_270/skewed)",
+            "background_complexity": "Background complexity (simple/medium/complex)",
+            "ocr_difficulty": "OCR difficulty level (easy/medium/hard/very_hard)",
+            "sensitive_data_types": ["List of sensitive data types (e.g., name, id_number, bank_account, address, phone, etc.)"],
+            "layout_type": "Layout type (table/list/paragraph/mixed/handwritten)",
+            "special_features": ["Special features (e.g., watermark, stamp, signature, barcode, qr_code, logo, etc.)"],
+            "testing_scenarios": ["Applicable testing scenarios (e.g., identity_verification, financial_audit, compliance_check, data_extraction, etc.)"],
+            "challenge_factors": ["Challenge factors (e.g., small_font, background_noise, uneven_lighting, skewed, blurry, multilingual, etc.)"],
+            "confidence_score": "Classification confidence (0-1)",
+            "recommended_preprocessing": ["Recommended preprocessing steps (e.g., denoising, correction, contrast_enhancement, etc.)"]
         }
 
-        请确保：
-        1. 分类要精确和具体，便于OCR_DLP系统性能评估
-        2. 识别所有可能影响OCR性能的因素
-        3. 提供实用的测试场景建议
-        4. 如果无法确定某个字段，设置为null
-        5. 只返回JSON，不要其他解释文字
+        Please ensure:
+        1. Classifications are precise and specific for OCR_DLP system performance evaluation
+        2. Identify all factors that may affect OCR performance
+        3. Provide practical testing scenario suggestions
+        4. If unable to determine a field, set it to null
+        5. Return only JSON, no other explanatory text
+        6. Use English for all field values
         """
         
         # Build request

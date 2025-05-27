@@ -1,30 +1,29 @@
-# OCR_DLP Image Labeling System
+# OCR_DLP Image Crawler & Dataset Generator
 
-A comprehensive CLI application for image classification and labeling designed for **OCR (Optical Character Recognition)** and **DLP (Data Loss Prevention)** performance testing and dataset preparation.
+A comprehensive CLI application for **crawling images** and **generating labeled datasets** for OCR (Optical Character Recognition) and DLP (Data Loss Prevention) model training.
 
-## 🎯 Overview
+## 🎯 Purpose
 
-The OCR_DLP Image Labeling System provides a powerful command-line interface with automated image search, download, and intelligent classification capabilities specifically designed for evaluating OCR and DLP system performance. The system uses advanced AI models to categorize documents, assess OCR difficulty levels, and identify sensitive data types for comprehensive testing scenarios.
+This is a **CRAWLER APPLICATION** that generates **LABELED DATASETS** for downstream model training. It crawls images from various sources and uses AI to generate comprehensive labels for training OCR, DLP, and document classification models.
+
+**Workflow: CRAWLER → LABELED DATASET → DOWNSTREAM MODEL TRAINING**
 
 ### Key Features
 
 - 🔍 **Multi-Engine Image Search**: Serper, Google, Bing, DuckDuckGo integration
 - 📥 **Robust Image Download**: Automated download with validation and error handling
-- 🤖 **AI-Powered Classification**: GPT-4V integration for intelligent document categorization
-- 🏷️ **Fine-Grained Labeling**: Comprehensive classification schema for OCR_DLP testing
-- 🔒 **Sensitive Data Detection**: Automatic identification of privacy-sensitive content
-- 📊 **OCR Difficulty Assessment**: Intelligent evaluation of text extraction challenges
-- 🧪 **Testing Scenario Mapping**: Automated identification of applicable test cases
-- 📁 **Batch Processing**: Efficient handling of large image datasets
-- ⚡ **CLI Interface**: Professional command-line tool with subcommands and options
-- ✅ **Comprehensive Validation**: Built-in result validation and quality checks
+- 🤖 **AI-Powered Labeling**: GPT-4V integration for intelligent document labeling
+- 🏷️ **Comprehensive Labels**: Multi-purpose labels for OCR, DLP, and classification training
+- 📁 **Dataset Generation**: Creates production-ready datasets with standard structure
+- ⚡ **CLI Interface**: Professional command-line tool with subcommands
+- ✅ **Quality Validation**: Built-in dataset quality checks
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.8+
-- OpenAI API key (for GPT-4V)
+- OpenAI API key (for GPT-4V labeling)
 - Serper API key (for image search)
 
 ### Installation
@@ -53,390 +52,168 @@ The OCR_DLP Image Labeling System provides a powerful command-line interface wit
 
 ### Verify Installation
 
-Run the CLI help to confirm everything is working:
-
 ```bash
-# Using Python directly
 python ocrdlp.py --help
-
-# Using Windows batch wrapper
-ocrdlp.bat --help
-
-# Using PowerShell (Windows)
-.\ocrdlp.bat --help
 ```
 
-Expected output:
-```
-OCR_DLP Image Labeling System - CLI Tool for image classification and labeling
-
-Available commands:
-  search      Search for images
-  download    Download images  
-  classify    Classify images
-  pipeline    Run complete pipeline
-  validate    Validate classification results
-```
-
-## 📋 CLI Usage Guide
-
-The `ocrdlp` command provides five main subcommands for different operations. You can use either `python ocrdlp.py` or `ocrdlp.bat` (Windows) to run commands.
+## 📋 Dataset Generation Workflow
 
 ### 1. Search for Images
 
-Search for images using various search engines:
-
 ```bash
-# Basic search
-python ocrdlp.py search "indian aadhaar card"
-# or on Windows:
-ocrdlp.bat search "indian aadhaar card"
-
-# Advanced search with options
-python ocrdlp.py search "invoice document" --engine serper --limit 20 --output urls.txt
-
-# Search with different engines
-python ocrdlp.py search "passport photo" --engine mixed --limit 15
+# Search for document images
+python ocrdlp.py search "invoice documents" --engine serper --limit 100 --output urls.txt
 ```
-
-**Options:**
-- `--engine`: Choose search engine (`serper`, `google`, `bing`, `duckduckgo`, `mixed`)
-- `--limit`: Maximum number of images to find (default: 10)
-- `--output`: Save URLs to file
 
 ### 2. Download Images
 
-Download images from search results or URL files:
+```bash
+# Download images to create dataset
+python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/raw_images
+```
+
+### 3. Generate Dataset with Labels
 
 ```bash
-# Download from search query
-python ocrdlp.py download --query "indian invoice" --output-dir ./images --limit 10
+# Create dataset structure
+mkdir datasets/invoice_dataset/images
+mkdir datasets/invoice_dataset/labels
 
-# Download from URL file
-python ocrdlp.py download --urls-file urls.txt --output-dir ./downloads
+# Copy images to dataset
+copy datasets/raw_images/*.* datasets/invoice_dataset/images/
 
-# Download with specific engine
-python ocrdlp.py download --query "bank statement" --output-dir ./bank_docs --engine serper --limit 5
+# Generate comprehensive labels
+python ocrdlp.py classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/labels.jsonl
 ```
 
-**Options:**
-- `--query`: Search query for images
-- `--urls-file`: File containing URLs to download
-- `--output-dir`: Output directory for images (required)
-- `--engine`: Search engine when using `--query`
-- `--limit`: Maximum images to download
-
-### 3. Classify Images
-
-Classify images in a directory using GPT-4V:
+### 4. Validate Dataset Quality
 
 ```bash
-# Basic classification
-python ocrdlp.py classify ./images
-
-# Classification with custom output and validation
-python ocrdlp.py classify ./documents --output results.jsonl --validate
-
-# Classify with automatic validation
-python ocrdlp.py classify ./test_images --validate
+# Validate generated dataset
+python ocrdlp.py validate datasets/invoice_dataset/labels/labels.jsonl
 ```
 
-**Options:**
-- `input_dir`: Directory containing images to classify (required)
-- `--output`: Output JSONL file (default: `classifications.jsonl`)
-- `--validate`: Validate results after classification
+## 🏗️ Generated Dataset Structure
 
-### 4. Complete Pipeline
+```
+datasets/
+└── invoice_dataset/
+    ├── images/              # Raw images for training
+    │   ├── image_001.jpg
+    │   ├── image_002.png
+    │   └── ...
+    ├── labels/              # AI-generated labels
+    │   ├── labels.jsonl     # Comprehensive labels
+    │   └── summary.md       # Dataset statistics
+    └── README.md            # Usage instructions for ML engineers
+```
 
-Run the full workflow: search → download → classify:
+## 📊 Label Schema
+
+Each image gets comprehensive labels for multiple downstream use cases:
+
+- **Document Classification**: `document_category`, `document_subcategory`
+- **OCR Training**: `ocr_difficulty`, `text_clarity`, `language_primary`
+- **DLP Training**: `sensitive_data_types`, `testing_scenarios`
+- **Quality Assessment**: `image_quality`, `background_complexity`
+- **Processing Hints**: `recommended_preprocessing`, `challenge_factors`
+
+## 🎯 Downstream Model Usage
+
+### OCR Model Training
+```python
+import json
+
+def load_ocr_dataset(dataset_path):
+    labels_path = f"{dataset_path}/labels/labels.jsonl"
+    with open(labels_path, 'r') as f:
+        labels = [json.loads(line) for line in f]
+    
+    return [{
+        'image_path': label['_file_info']['file_path'],
+        'difficulty': label['ocr_difficulty'],
+        'text_clarity': label['text_clarity'],
+        'language': label['language_primary']
+    } for label in labels]
+```
+
+### DLP Model Training
+```python
+def load_dlp_dataset(dataset_path):
+    labels_path = f"{dataset_path}/labels/labels.jsonl"
+    with open(labels_path, 'r') as f:
+        labels = [json.loads(line) for line in f]
+    
+    return [{
+        'image_path': label['_file_info']['file_path'],
+        'sensitive_data': label['sensitive_data_types'],
+        'document_type': label['document_category']
+    } for label in labels]
+```
+
+## 🔧 CLI Commands
+
+### Search Command
+```bash
+python ocrdlp.py search "document type" --engine serper --limit 50 --output urls.txt
+```
+
+### Download Command
+```bash
+python ocrdlp.py download --urls-file urls.txt --output-dir ./images
+# OR
+python ocrdlp.py download --query "invoice" --output-dir ./images --limit 20
+```
+
+### Classify Command
+```bash
+python ocrdlp.py classify ./images --output labels.jsonl --validate
+```
+
+### Pipeline Command (Complete Workflow)
+```bash
+python ocrdlp.py pipeline "invoice documents" --output-dir ./invoice_dataset --limit 50
+```
+
+### Validate Command
+```bash
+python ocrdlp.py validate labels.jsonl
+```
+
+## 🎉 Example: Creating Invoice Dataset
 
 ```bash
-# Complete pipeline
-python ocrdlp.py pipeline "indian passport" --output-dir ./passport_data
+# Complete workflow to create invoice training dataset
+python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoices --limit 100
 
-# Pipeline with options
-python ocrdlp.py pipeline "invoice document" --output-dir ./invoice_analysis --engine serper --limit 20
-
-# Pipeline for specific document types
-python ocrdlp.py pipeline "aadhaar card blurry" --output-dir ./aadhaar_test --limit 15
+# Dataset is now ready at ./datasets/invoices/
+# - images/ contains downloaded invoice images
+# - classifications.jsonl contains comprehensive labels
 ```
 
-**Options:**
-- `query`: Search query (required)
-- `--output-dir`: Output directory (required)
-- `--engine`: Search engine to use (default: `serper`)
-- `--limit`: Maximum number of images (default: 10)
+## 🛠️ Development
 
-### 5. Validate Results
-
-Validate classification results and generate reports:
-
+### Run Tests
 ```bash
-# Validate classification file
-python ocrdlp.py validate classifications.jsonl
-
-# Validate custom results file
-python ocrdlp.py validate ./results/analysis.jsonl
-```
-
-**Options:**
-- `input`: JSONL file to validate (required)
-
-## 🏗️ System Architecture
-
-### Core Components
-
-- **`ocrdlp.py`**: Main CLI application with subcommands
-- **`gpt4v_image_labeler.py`**: Image classification engine
-- **`crawler/search.py`**: Multi-engine image search
-- **`crawler/image_crawler.py`**: Image download and validation
-
-### Command Structure
-
-```
-ocrdlp
-├── search      # Image search functionality
-├── download    # Image download from URLs/queries
-├── classify    # AI-powered image classification
-├── pipeline    # Complete workflow automation
-└── validate    # Result validation and reporting
-```
-
-## 📊 Classification Schema
-
-The system provides comprehensive document classification with the following categories:
-
-### Document Categories
-- **发票** (Invoice): GST发票, 商业发票, 服务发票
-- **收据** (Receipt): 餐厅收据, 出租车收据, 购物收据
-- **身份证** (ID Card): 身份证正面, 身份证背面
-- **护照** (Passport): 护照信息页, 护照签证页
-- **银行卡** (Bank Card): 信用卡, 借记卡
-- **合同** (Contract): 商业合同, 租赁合同
-- **证书** (Certificate): 学历证书, 资格证书
-
-### Quality Assessment
-- **Text Clarity**: 清晰 (Clear), 模糊 (Blurry), 部分模糊 (Partially Blurry)
-- **Image Quality**: 高 (High), 中 (Medium), 低 (Low)
-- **OCR Difficulty**: 简单 (Simple), 中等 (Medium), 困难 (Difficult), 极困难 (Very Difficult)
-
-### Sensitive Data Types
-- **姓名** (Names)
-- **身份证号** (ID Numbers)
-- **银行卡号** (Bank Card Numbers)
-- **地址** (Addresses)
-- **电话** (Phone Numbers)
-- **邮箱** (Email Addresses)
-
-### Testing Scenarios
-- **身份验证** (Identity Verification)
-- **财务审计** (Financial Auditing)
-- **合规检查** (Compliance Checking)
-- **数据提取** (Data Extraction)
-
-## 📁 Output Format
-
-### JSONL Classification Output
-
-Each classified image generates a structured JSON record:
-
-```json
-{
-  "document_category": "身份证",
-  "document_subcategory": "身份证正面",
-  "language_primary": "印地语",
-  "text_clarity": "清晰",
-  "image_quality": "高",
-  "ocr_difficulty": "简单",
-  "sensitive_data_types": ["姓名", "身份证号", "出生日期"],
-  "testing_scenarios": ["身份验证", "数据提取"],
-  "challenge_factors": ["多语言"],
-  "confidence_score": 0.95,
-  "_metadata": {
-    "image_path": "image.jpg",
-    "classification_timestamp": 1234567890,
-    "purpose": "OCR_DLP_performance_testing"
-  }
-}
-```
-
-### Validation Reports
-
-The `validate` command generates comprehensive reports:
-
-```
-✅ Validation completed
-📊 Total records: 15
-📊 Valid classifications: 14
-📊 Success rate: 93.3%
-
-📋 Field Completeness:
-  document_category: 14/15 (93.3%)
-  text_clarity: 13/15 (86.7%)
-  ocr_difficulty: 15/15 (100.0%)
-  sensitive_data_types: 12/15 (80.0%)
-```
-
-## 🔧 Configuration
-
-### API Requirements
-
-1. **Serper API** (Image Search)
-   - Sign up at [serper.dev](https://serper.dev)
-   - Get API key from dashboard
-   - Free tier: 2,500 searches/month
-
-2. **OpenAI API** (GPT-4V Classification)
-   - Sign up at [platform.openai.com](https://platform.openai.com)
-   - Create API key
-   - Requires credits for GPT-4V usage
-
-### Supported Image Formats
-
-- JPEG (.jpg, .jpeg)
-- PNG (.png)
-- WebP (.webp)
-- BMP (.bmp)
-- TIFF (.tiff)
-
-### Performance Settings
-
-- **Concurrent Downloads**: Configurable in search functions
-- **Rate Limiting**: Automatic handling of API limits
-- **Error Handling**: Comprehensive retry logic
-- **Memory Management**: Optimized for large datasets
-
-## 🎯 Real-World Examples
-
-### Example 1: OCR Testing Dataset
-
-Create a dataset for testing OCR accuracy on Indian documents:
-
-```bash
-# Step 1: Search and download Indian ID cards
-python ocrdlp.py pipeline "indian aadhaar card" --output-dir ./ocr_test_ids --limit 50
-
-# Step 2: Search and download invoices
-python ocrdlp.py pipeline "indian gst invoice" --output-dir ./ocr_test_invoices --limit 30
-
-# Step 3: Validate all results
-python ocrdlp.py validate ./ocr_test_ids/classifications.jsonl
-python ocrdlp.py validate ./ocr_test_invoices/classifications.jsonl
-```
-
-### Example 2: DLP System Evaluation
-
-Test DLP system's ability to detect sensitive documents:
-
-```bash
-# Download various document types
-python ocrdlp.py download --query "passport document" --output-dir ./dlp_test --limit 20
-
-# Classify for sensitive data detection
-python ocrdlp.py classify ./dlp_test --output dlp_analysis.jsonl --validate
-
-# Review sensitive data types found
-python ocrdlp.py validate dlp_analysis.jsonl
-```
-
-### Example 3: Quality Assessment
-
-Evaluate image quality for OCR difficulty:
-
-```bash
-# Search for blurry documents
-python ocrdlp.py search "blurry invoice document" --limit 25 --output blurry_urls.txt
-
-# Download and classify
-python ocrdlp.py download --urls-file blurry_urls.txt --output-dir ./quality_test
-python ocrdlp.py classify ./quality_test --output quality_analysis.jsonl --validate
-```
-
-## 🧪 Testing and Development
-
-### Run Development Tests
-
-```bash
-# Test core functionality
 python test_viability.py
-
-# Test image labeling workflow
 python test_image_labeling.py
-
-# Compare labeling vs extraction
-python demo_labeling_vs_extraction.py
 ```
 
-### Test Coverage
+### Direct Labeling (Alternative)
+```bash
+python gpt4v_image_labeler.py ./images output_labels.jsonl
+```
 
-The system includes comprehensive tests for:
-- ✅ CLI command parsing and execution
-- ✅ Image search across multiple engines
-- ✅ Image download and validation
-- ✅ GPT-4V classification accuracy
-- ✅ Error handling and edge cases
-- ✅ End-to-end workflow validation
+## 📈 Key Benefits
 
-## 📈 Performance Metrics
-
-### Typical Performance
-- **Search Speed**: 2-5 seconds per query
-- **Download Speed**: 1-3 seconds per image
-- **Classification Speed**: 10-20 seconds per image
-- **Token Usage**: ~1,500 tokens per classification
-- **Success Rate**: 95%+ in production
-
-### Optimization Tips
-1. **Use Pipeline Command**: Most efficient for complete workflows
-2. **Batch Processing**: Process multiple images in single classify command
-3. **Engine Selection**: Use `mixed` engine for best coverage
-4. **Limit Management**: Set appropriate limits based on API quotas
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-1. **Missing API Keys**
-   ```
-   ❌ Missing required environment variables: SERPER_API_KEY, OPENAI_API_KEY
-   ```
-   **Solution**: Set environment variables correctly
-
-2. **Rate Limit Errors**
-   ```
-   ❌ Search failed: 429 Too Many Requests
-   ```
-   **Solution**: Wait and retry, or upgrade API plan
-
-3. **No Images Found**
-   ```
-   ❌ No images found
-   ```
-   **Solution**: Try different search terms or engines
-
-4. **Classification Errors**
-   ```
-   ❌ Classification failed: JSON parsing failed
-   ```
-   **Solution**: Check OpenAI API status and credits
-
-### Debug Mode
-
-For detailed error information, check the console output during command execution. All commands provide verbose feedback about their progress and any issues encountered.
-
-## 🎉 Project Status
-
-**✅ PRODUCTION READY CLI APPLICATION**
-
-- **CLI Interface**: Professional command-line tool with subcommands
-- **Functionality**: 100% verified and working
-- **APIs**: Serper and OpenAI integration confirmed
-- **Options**: Comprehensive command-line options exposed
-- **Validation**: Built-in result validation and reporting
-- **Documentation**: Complete usage guide and examples
-
-The OCR_DLP Image Labeling System is now a fully-featured CLI application ready for immediate use in OCR and DLP system testing, dataset preparation, and performance evaluation scenarios.
+1. **Automated Dataset Creation** - No manual labeling required
+2. **Multi-Purpose Labels** - One dataset serves multiple model types  
+3. **Production-Ready** - Standard ML dataset format
+4. **Scalable** - Can generate thousands of labeled images
+5. **Quality Assured** - Built-in validation and quality checks
 
 ---
 
-**For detailed technical documentation, see [`README_IMAGE_LABELING.md`](README_IMAGE_LABELING.md)** 
+**This is a CRAWLER for DATASET GENERATION, not a model evaluation tool.**
+
+Generated datasets are ready for use in training OCR, DLP, and document classification models. 
