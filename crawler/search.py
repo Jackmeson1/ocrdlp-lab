@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 
 import requests
 
+from http_client import get_with_retry, post_with_retry
+
 
 class ImageSearchEngine:
     """Unified image search engine supporting multiple providers."""
@@ -54,7 +56,7 @@ class ImageSearchEngine:
         payload = {'q': query, 'num': min(limit, 100)}
 
         try:
-            response = requests.post(url, headers=headers, json=payload, timeout=10)
+            response = post_with_retry(url, headers=headers, json=payload, timeout=10)
             if response.status_code != 200:
                 return []
             data = response.json()
@@ -90,7 +92,7 @@ class ImageSearchEngine:
                 'safe': 'off',
             }
 
-            response = requests.get(url, params=params, timeout=10)
+            response = get_with_retry(url, params=params, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 images = data.get('images_results', [])
@@ -114,7 +116,7 @@ class ImageSearchEngine:
             params = {'query': query, 'per_page': min(limit, 30), 'orientation': 'all'}
             headers = {'Authorization': f'Client-ID {access_key}'}
 
-            response = requests.get(url, params=params, headers=headers, timeout=10)
+            response = get_with_retry(url, params=params, headers=headers, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 return [photo['urls']['regular'] for photo in data.get('results', [])][:limit]
@@ -144,7 +146,7 @@ class ImageSearchEngine:
                 'media': 'photos',
             }
 
-            response = requests.get(url, params=params, timeout=10)
+            response = get_with_retry(url, params=params, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 photos = data.get('photos', {}).get('photo', [])
@@ -204,7 +206,7 @@ async def download_images(urls: list[str], output_dir: str = "test_downloads") -
 
     for i, url in enumerate(urls):
         try:
-            response = await asyncio.to_thread(requests.get, url, timeout=30)
+            response = await asyncio.to_thread(get_with_retry, url, timeout=30)
             if response.status_code == 200:
                 content = response.content
 

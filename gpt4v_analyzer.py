@@ -11,8 +11,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-import requests
 from PIL import Image
+
+from http_client import post_with_retry
 
 
 class GPT4VAnalyzer:
@@ -119,7 +120,7 @@ class GPT4VAnalyzer:
 
         # Send request
         try:
-            response = requests.post(
+            response = post_with_retry(
                 self.base_url,
                 headers=self.headers,
                 json=payload,

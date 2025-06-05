@@ -7,6 +7,13 @@ Classifies images into fine-grained categories for OCR_DLP system testing.
 import asyncio
 
 import base64
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+
+import base64
 import io
 import json
 import os
@@ -14,9 +21,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
+
 import requests
 import requests.exceptions
 from PIL import Image
+
+from http_client import post_with_retry
 
 
 class GPT4VImageLabeler:
@@ -28,6 +38,7 @@ class GPT4VImageLabeler:
         self.headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
 
     def encode_image(self, image_path: str) -> str:
+
         """Encode image to base64.
 
         Images larger than 4 MB are re-encoded with Pillow at reduced quality to
@@ -46,6 +57,7 @@ class GPT4VImageLabeler:
             buffer = io.BytesIO()
             img.save(buffer, format="JPEG", quality=85)
             return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
 
     def get_image_info(self, image_path: str) -> dict[str, Any]:
         """Get basic image information."""
@@ -125,7 +137,7 @@ class GPT4VImageLabeler:
         # Send request synchronously. The caller may choose to run this in a
         # thread pool to avoid blocking the event loop.
         try:
-            response = requests.post(
+            response = post_with_retry(
                 self.base_url,
                 headers=self.headers,
                 json=payload,

@@ -17,6 +17,7 @@ This is a **CRAWLER APPLICATION** that generates **LABELED DATASETS** for downst
 - 📁 **Dataset Generation**: Creates production-ready datasets with standard structure
 - ⚡ **CLI Interface**: Professional command-line tool with subcommands
 - ✅ **Quality Validation**: Built-in dataset quality checks
+- ⏳ **Rate-Limit Handling**: Automatic retries with exponential backoff
 
 ## 🚀 Quick Start
 

@@ -11,6 +11,8 @@ from urllib.parse import urlparse
 import requests
 from tqdm.asyncio import tqdm
 
+from http_client import get_with_retry
+
 from .deduplicator import ImageDeduplicator
 from .filters import ImageFilter
 from .search import ImageSearchEngine
@@ -145,7 +147,7 @@ class ImageCrawler:
         async with semaphore:
             for attempt in range(self.retry_attempts):
                 try:
-                    response = await asyncio.to_thread(requests.get, url, timeout=30)
+                    response = await asyncio.to_thread(get_with_retry, url, timeout=30)
 
                     if response.status_code == 200:
                         content = response.content
