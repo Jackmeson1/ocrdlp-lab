@@ -1,6 +1,5 @@
-import os
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from ocrdlp import OCRDLPCli
@@ -102,7 +101,7 @@ async def test_pipeline_command(tmp_path):
 
     assert exit_code == 0
     mock_search.assert_awaited_once()
-    mock_download_fn.assert_awaited_once_with(mock_urls, output_dir=str(tmp_path))
+    mock_download_fn.assert_awaited_once_with(mock_urls, output_dir=str(tmp_path / "images"))
     mock_classify.assert_awaited_once()
 
 

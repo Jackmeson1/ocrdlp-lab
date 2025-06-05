@@ -301,21 +301,25 @@ def generate_classification_summary(results: List[Dict], output_file: str):
         f.write(f"- Total Images: {total_images}\n")
         f.write(f"- Successfully Classified: {successful}\n")
         f.write(f"- Failed: {failed}\n")
-        f.write(f"- Success Rate: {successful/total_images*100:.1f}%\n\n")
+        success_rate = successful / total_images * 100 if total_images else 0
+        f.write(f"- Success Rate: {success_rate:.1f}%\n\n")
         
         f.write("## Document Categories\n")
         for cat, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
-            f.write(f"- {cat}: {count} ({count/successful*100:.1f}%)\n")
+            percentage = count / successful * 100 if successful else 0.0
+            f.write(f"- {cat}: {count} ({percentage:.1f}%)\n")
         f.write("\n")
         
         f.write("## OCR Difficulty Distribution\n")
         for diff, count in sorted(difficulties.items(), key=lambda x: x[1], reverse=True):
-            f.write(f"- {diff}: {count} ({count/successful*100:.1f}%)\n")
+            percentage = count / successful * 100 if successful else 0.0
+            f.write(f"- {diff}: {count} ({percentage:.1f}%)\n")
         f.write("\n")
         
         f.write("## Language Distribution\n")
         for lang, count in sorted(languages.items(), key=lambda x: x[1], reverse=True):
-            f.write(f"- {lang}: {count} ({count/successful*100:.1f}%)\n")
+            percentage = count / successful * 100 if successful else 0.0
+            f.write(f"- {lang}: {count} ({percentage:.1f}%)\n")
         f.write("\n")
     
     print(f"📊 Summary report saved to: {report_file}")
