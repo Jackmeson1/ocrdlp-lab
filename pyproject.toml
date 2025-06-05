@@ -35,9 +35,11 @@ dev = [
 [project.scripts]
 ocrdlp = "ocrdlp:main"
 
+
 [tool.setuptools]
+py-modules = ["ocrdlp", "gpt4v_image_labeler", "gpt4v_analyzer"]
 packages = ["crawler"]
-py-modules = ["ocrdlp", "gpt4v_analyzer", "gpt4v_image_labeler"]
+
 
 [tool.ruff]
 target-version = "py311"
