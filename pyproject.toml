@@ -20,6 +20,7 @@ dependencies = [
     "imagehash>=4.3.1",
     "click>=8.1.7",
     "tqdm>=4.66.1",
+    "tenacity>=8.2.3",
 ]
 
 [project.optional-dependencies]
