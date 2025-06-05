@@ -11,7 +11,7 @@
 ## MVP Workflow
 ```bash
 # Complete dataset generation in one command
-python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoices --limit 100
+ocrdlp pipeline "invoice documents" --output-dir ./datasets/invoices --limit 100
 ```
 
 ## Generated Output

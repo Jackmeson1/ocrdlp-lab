@@ -41,10 +41,10 @@ Use the crawler to generate new datasets:
 
 ```bash
 # Complete workflow
-python ocrdlp.py pipeline "document_type" --output-dir ./datasets/new_dataset --limit 100
+ocrdlp pipeline "document_type" --output-dir ./datasets/new_dataset --limit 100
 
 # Manual workflow
-python ocrdlp.py search "document_type" --limit 100 --output urls.txt
-python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/raw_images
-python ocrdlp.py classify ./datasets/raw_images --output ./datasets/new_dataset/labels.jsonl
+ocrdlp search "document_type" --limit 100 --output urls.txt
+ocrdlp download --urls-file urls.txt --output-dir ./datasets/raw_images
+ocrdlp classify ./datasets/raw_images --output ./datasets/new_dataset/labels.jsonl
 ``` 

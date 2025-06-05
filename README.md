@@ -34,9 +34,9 @@ This is a **CRAWLER APPLICATION** that generates **LABELED DATASETS** for downst
    cd ocrdlp-lab
    ```
 
-2. **Install dependencies**
+2. **Install the package**
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
 
 3. **Set environment variables**
@@ -53,7 +53,7 @@ This is a **CRAWLER APPLICATION** that generates **LABELED DATASETS** for downst
 ### Verify Installation
 
 ```bash
-python ocrdlp.py --help
+ocrdlp --help
 ```
 
 ## 📋 Dataset Generation Workflow
@@ -62,14 +62,14 @@ python ocrdlp.py --help
 
 ```bash
 # Search for document images
-python ocrdlp.py search "invoice documents" --engine serper --limit 100 --output urls.txt
+ocrdlp search "invoice documents" --engine serper --limit 100 --output urls.txt
 ```
 
 ### 2. Download Images
 
 ```bash
 # Download images to create dataset
-python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/raw_images
+ocrdlp download --urls-file urls.txt --output-dir ./datasets/raw_images
 ```
 
 ### 3. Generate Dataset with Labels
@@ -83,14 +83,14 @@ mkdir datasets/invoice_dataset/labels
 copy datasets/raw_images/*.* datasets/invoice_dataset/images/
 
 # Generate comprehensive labels
-python ocrdlp.py classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/labels.jsonl
+ocrdlp classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/labels.jsonl
 ```
 
 ### 4. Validate Dataset Quality
 
 ```bash
 # Validate generated dataset
-python ocrdlp.py validate datasets/invoice_dataset/labels/labels.jsonl
+ocrdlp validate datasets/invoice_dataset/labels/labels.jsonl
 ```
 
 ## 🏗️ Generated Dataset Structure
@@ -155,36 +155,36 @@ def load_dlp_dataset(dataset_path):
 
 ### Search Command
 ```bash
-python ocrdlp.py search "document type" --engine serper --limit 50 --output urls.txt
+ocrdlp search "document type" --engine serper --limit 50 --output urls.txt
 ```
 
 ### Download Command
 ```bash
-python ocrdlp.py download --urls-file urls.txt --output-dir ./images
+ocrdlp download --urls-file urls.txt --output-dir ./images
 # OR
-python ocrdlp.py download --query "invoice" --output-dir ./images --limit 20
+ocrdlp download --query "invoice" --output-dir ./images --limit 20
 ```
 
 ### Classify Command
 ```bash
-python ocrdlp.py classify ./images --output labels.jsonl --validate
+ocrdlp classify ./images --output labels.jsonl --validate
 ```
 
 ### Pipeline Command (Complete Workflow)
 ```bash
-python ocrdlp.py pipeline "invoice documents" --output-dir ./invoice_dataset --limit 50
+ocrdlp pipeline "invoice documents" --output-dir ./invoice_dataset --limit 50
 ```
 
 ### Validate Command
 ```bash
-python ocrdlp.py validate labels.jsonl
+ocrdlp validate labels.jsonl
 ```
 
 ## 🎉 Example: Creating Invoice Dataset
 
 ```bash
 # Complete workflow to create invoice training dataset
-python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoices --limit 100
+ocrdlp pipeline "invoice documents" --output-dir ./datasets/invoices --limit 100
 
 # Dataset is now ready at ./datasets/invoices/
 # - images/ contains downloaded invoice images
