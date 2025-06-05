@@ -15,6 +15,8 @@ from PIL import Image
 
 from crawler.search import search_images, download_images
 from gpt4v_image_labeler import GPT4VImageLabeler
+from unittest.mock import patch, Mock
+import logging
 
 
 @pytest.mark.asyncio
@@ -166,6 +168,32 @@ async def test_project_viability():
         if temp_dir.exists():
             shutil.rmtree(temp_dir)
             print(f"\n🧹 Cleaned up temp directory")
+
+
+@pytest.mark.asyncio
+async def test_search_timeout_handled(caplog):
+    """search_images should log an error and return empty list on timeout."""
+    caplog.set_level(logging.ERROR, logger="crawler.search")
+    with (
+        patch.dict(os.environ, {"SERPER_API_KEY": "test"}),
+        patch("requests.post", side_effect=requests.exceptions.Timeout),
+    ):
+        urls = await search_images("test", engine="serper", limit=1)
+    assert urls == []
+    assert "Serper search error" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_download_bad_status(caplog, tmp_path):
+    """download_images should skip URLs when HTTP status is not 200."""
+    caplog.set_level(logging.WARNING, logger="crawler.search")
+    mock_resp = Mock()
+    mock_resp.status_code = 500
+    mock_resp.headers = {"content-type": "image/jpeg"}
+    with patch("requests.get", return_value=mock_resp):
+        results = await download_images(["https://example.com/a.jpg"], output_dir=str(tmp_path))
+    assert results == {}
+    assert "Failed to download https://example.com/a.jpg" in caplog.text
 
 
 if __name__ == "__main__":
