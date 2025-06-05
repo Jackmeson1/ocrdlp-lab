@@ -3,16 +3,16 @@ Image crawler for collecting images from various sources.
 """
 
 import asyncio
-import os
-from typing import List, Dict, Optional, Set
-from urllib.parse import urlparse
-from pathlib import Path
 import logging
-from tqdm.asyncio import tqdm
-import requests
+import os
+from pathlib import Path
+from urllib.parse import urlparse
 
-from .filters import ImageFilter
+import requests
+from tqdm.asyncio import tqdm
+
 from .deduplicator import ImageDeduplicator
+from .filters import ImageFilter
 from .search import ImageSearchEngine
 
 
@@ -31,8 +31,8 @@ class ImageCrawler:
         self.retry_attempts = retry_attempts
         self.filter = ImageFilter()
         self.deduplicator = ImageDeduplicator()
-        self.downloaded_urls: Set[str] = set()
-        self.search_engine: Optional[ImageSearchEngine] = None
+        self.downloaded_urls: set[str] = set()
+        self.search_engine: ImageSearchEngine | None = None
 
         # Setup logging
         logging.basicConfig(level=logging.INFO)
@@ -48,8 +48,8 @@ class ImageCrawler:
         pass
 
     async def search_images(
-        self, keywords: List[str], max_per_keyword: int = 100, engine: str = "mixed"
-    ) -> List[str]:
+        self, keywords: list[str], max_per_keyword: int = 100, engine: str = "mixed"
+    ) -> list[str]:
         """
         Search for image URLs using multiple sources or a specific engine.
 
@@ -90,7 +90,7 @@ class ImageCrawler:
 
         return list(set(all_urls))  # Remove global duplicates
 
-    async def _search_engine_wrapper(self, engine: str, keyword: str, limit: int) -> List[str]:
+    async def _search_engine_wrapper(self, engine: str, keyword: str, limit: int) -> list[str]:
         """Wrapper for the unified search engine interface."""
         try:
             return await self.search_engine.search_images(keyword, engine, limit)
@@ -99,23 +99,23 @@ class ImageCrawler:
             return []
 
     # Legacy methods for backward compatibility
-    async def _search_unsplash(self, keyword: str, limit: int) -> List[str]:
+    async def _search_unsplash(self, keyword: str, limit: int) -> list[str]:
         """Search Unsplash for images."""
         return await self._search_engine_wrapper("unsplash", keyword, limit)
 
-    async def _search_google_images(self, keyword: str, limit: int) -> List[str]:
+    async def _search_google_images(self, keyword: str, limit: int) -> list[str]:
         """Search Google Images via SerpAPI."""
         return await self._search_engine_wrapper("serpapi", keyword, limit)
 
-    async def _search_flickr(self, keyword: str, limit: int) -> List[str]:
+    async def _search_flickr(self, keyword: str, limit: int) -> list[str]:
         """Search Flickr for images."""
         return await self._search_engine_wrapper("flickr", keyword, limit)
 
-    async def _search_serper(self, keyword: str, limit: int) -> List[str]:
+    async def _search_serper(self, keyword: str, limit: int) -> list[str]:
         """Search images using Serper.dev API."""
         return await self._search_engine_wrapper("serper", keyword, limit)
 
-    async def download_images(self, urls: List[str]) -> Dict[str, str]:
+    async def download_images(self, urls: list[str]) -> dict[str, str]:
         """Download images with filtering and deduplication."""
         semaphore = asyncio.Semaphore(self.max_concurrent)
 
@@ -139,7 +139,7 @@ class ImageCrawler:
 
     async def _download_single_image(
         self, semaphore: asyncio.Semaphore, url: str, filename_base: str
-    ) -> Optional[Dict[str, str]]:
+    ) -> dict[str, str] | None:
         """Download a single image with retry logic."""
 
         async with semaphore:
@@ -188,6 +188,17 @@ class ImageCrawler:
                     elif response.status_code in [404, 403, 410]:
                         break
 
+                except requests.exceptions.Timeout:
+                    if attempt == self.retry_attempts - 1:
+                        self.logger.error(f"Timeout downloading {url}")
+                    else:
+                        self.logger.warning(
+                            f"Timeout downloading {url}, retrying ({attempt + 1}/{self.retry_attempts})"
+                        )
+                        await asyncio.sleep(1)
+                except requests.exceptions.RequestException as e:
+                    self.logger.error(f"Request error downloading {url}: {e}")
+                    break
                 except Exception as e:
                     if attempt == self.retry_attempts - 1:
                         self.logger.error(
@@ -202,7 +213,7 @@ class ImageCrawler:
         with open(path, "wb") as f:
             f.write(data)
 
-    async def crawl_keywords(self, keywords: List[str], max_images: int = 500) -> Dict[str, str]:
+    async def crawl_keywords(self, keywords: list[str], max_images: int = 500) -> dict[str, str]:
         """Main crawling method."""
         self.logger.info(f"Starting crawl for {len(keywords)} keywords, max {max_images} images")
 

@@ -17,7 +17,9 @@ class ImageSearchEngine:
         self.logger = logging.getLogger(__name__)
         self.session = session
 
-    async def search_images(self, query: str, engine: str = "serper", limit: int = 100) -> list[str]:
+    async def search_images(
+        self, query: str, engine: str = "serper", limit: int = 100
+    ) -> list[str]:
         """
         Unified interface for image search across multiple engines.
 
@@ -48,14 +50,8 @@ class ImageSearchEngine:
             return []
 
         url = "https://google.serper.dev/images"
-        headers = {
-            'X-API-KEY': api_key,
-            'Content-Type': 'application/json'
-        }
-        payload = {
-            'q': query,
-            'num': min(limit, 100)
-        }
+        headers = {'X-API-KEY': api_key, 'Content-Type': 'application/json'}
+        payload = {'q': query, 'num': min(limit, 100)}
 
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=10)
@@ -70,7 +66,10 @@ class ImageSearchEngine:
                 elif 'link' in img:
                     urls.append(img['link'])
             return urls[:limit]
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            self.logger.warning("Serper search timed out")
+            return []
+        except requests.exceptions.RequestException as e:
             self.logger.error(f"Serper search error: {e}")
             return []
 
@@ -88,7 +87,7 @@ class ImageSearchEngine:
                 'q': query,
                 'api_key': api_key,
                 'num': min(limit, 100),
-                'safe': 'off'
+                'safe': 'off',
             }
 
             response = requests.get(url, params=params, timeout=10)
@@ -96,7 +95,9 @@ class ImageSearchEngine:
                 data = response.json()
                 images = data.get('images_results', [])
                 return [img['original'] for img in images if 'original' in img][:limit]
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            self.logger.warning("SerpAPI search timed out")
+        except requests.exceptions.RequestException as e:
             self.logger.error(f"SerpAPI search error: {e}")
 
         return []
@@ -110,18 +111,16 @@ class ImageSearchEngine:
 
         try:
             url = "https://api.unsplash.com/search/photos"
-            params = {
-                'query': query,
-                'per_page': min(limit, 30),
-                'orientation': 'all'
-            }
+            params = {'query': query, 'per_page': min(limit, 30), 'orientation': 'all'}
             headers = {'Authorization': f'Client-ID {access_key}'}
 
             response = requests.get(url, params=params, headers=headers, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 return [photo['urls']['regular'] for photo in data.get('results', [])][:limit]
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            self.logger.warning("Unsplash search timed out")
+        except requests.exceptions.RequestException as e:
             self.logger.error(f"Unsplash search error: {e}")
 
         return []
@@ -142,7 +141,7 @@ class ImageSearchEngine:
                 'format': 'json',
                 'nojsoncallback': 1,
                 'per_page': min(limit, 100),
-                'media': 'photos'
+                'media': 'photos',
             }
 
             response = requests.get(url, params=params, timeout=10)
@@ -158,7 +157,9 @@ class ImageSearchEngine:
                     url = f"https://farm{farm}.staticflickr.com/{server}/{photo_id}_{secret}_b.jpg"
                     urls.append(url)
                 return urls[:limit]
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            self.logger.warning("Flickr search timed out")
+        except requests.exceptions.RequestException as e:
             self.logger.error(f"Flickr search error: {e}")
 
         return []
