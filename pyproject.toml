@@ -17,7 +17,6 @@ dependencies = [
     "Pillow>=10.1.0",
     "pytest>=7.4.3",
     "pytest-asyncio>=0.21.1",
-    "openai>=1.3.7",
     "requests>=2.31.0",
     "beautifulsoup4>=4.12.2",
     "imagehash>=4.3.1",
@@ -34,7 +33,11 @@ dev = [
 ]
 
 [project.scripts]
-ocrdlp = "cli:cli"
+ocrdlp = "ocrdlp:main"
+
+[tool.setuptools]
+packages = ["crawler"]
+py-modules = ["ocrdlp", "gpt4v_analyzer", "gpt4v_image_labeler"]
 
 [tool.ruff]
 target-version = "py311"
