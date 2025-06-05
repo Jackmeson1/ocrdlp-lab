@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 import pytest
 from PIL import Image
-import aiohttp
 
 # 导入现有模块
 from crawler.search import search_images, download_images

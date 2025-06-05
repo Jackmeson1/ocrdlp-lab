@@ -9,6 +9,7 @@ import tempfile
 import shutil
 from pathlib import Path
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
+import requests
 from PIL import Image
 import io
 
@@ -131,26 +132,16 @@ class TestSerperIntegration:
             ]
         }
         
-        # Create a proper async context manager mock
-        mock_response = AsyncMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(return_value=mock_response_data)
-        
-        # Create async context manager
-        mock_context_manager = AsyncMock()
-        mock_context_manager.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_context_manager.__aexit__ = AsyncMock(return_value=None)
-        
-        # Mock the HTTP session
-        with patch('aiohttp.ClientSession') as mock_session_class:
-            mock_session = MagicMock()
-            mock_session.post.return_value = mock_context_manager
-            mock_session.close = AsyncMock()
-            mock_session_class.return_value = mock_session
-            
-            # Mock environment variable
-            with patch.dict(os.environ, {'SERPER_API_KEY': 'test_key'}):
+        # Mock requests.post response
+        mock_response = Mock()
+        mock_response.json.return_value = mock_response_data
+        mock_response.raise_for_status = Mock()
+
+        with patch("requests.post", return_value=mock_response) as mock_post:
+            with patch.dict(os.environ, {"SERPER_API_KEY": "test_key"}):
                 urls = await search_images(query, engine="serper", limit=10)
+
+        mock_post.assert_called_once()
         
         # Should return the mocked URLs
         assert isinstance(urls, list)
@@ -176,25 +167,16 @@ class TestSerperIntegration:
         query = "test query"
         
         # Mock API error response
-        mock_response = AsyncMock()
-        mock_response.status = 429  # Rate limit error
-        
-        # Create async context manager
-        mock_context_manager = AsyncMock()
-        mock_context_manager.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_context_manager.__aexit__ = AsyncMock(return_value=None)
-        
-        # Mock the HTTP session
-        with patch('aiohttp.ClientSession') as mock_session_class:
-            mock_session = MagicMock()
-            mock_session.post.return_value = mock_context_manager
-            mock_session.close = AsyncMock()
-            mock_session_class.return_value = mock_session
-            
-            # Mock environment variable
-            with patch.dict(os.environ, {'SERPER_API_KEY': 'test_key'}):
+        mock_response = Mock()
+        mock_response.json.return_value = {}
+        mock_response.raise_for_status = Mock()
+
+        with patch("requests.post", return_value=mock_response) as mock_post:
+            with patch.dict(os.environ, {"SERPER_API_KEY": "test_key"}):
                 urls = await search_images(query, engine="serper", limit=10)
-        
+
+        mock_post.assert_called_once()
+
         # Should return empty list on error
         assert isinstance(urls, list)
         assert len(urls) == 0
@@ -308,44 +290,43 @@ class TestSerperIntegration:
         engines = ["serper", "serpapi", "unsplash", "flickr"]
         
         for engine in engines:
-            # Mock successful response for each engine
-            mock_response = AsyncMock()
-            mock_response.status = 200
-            
+            env_vars = {
+                'SERPER_API_KEY': 'test_key',
+                'SERPAPI_KEY': 'test_key',
+                'UNSPLASH_ACCESS_KEY': 'test_key',
+                'FLICKR_KEY': 'test_key'
+            }
+
             if engine == "serper":
-                mock_response.json = AsyncMock(return_value={'images': [{'imageUrl': 'http://test.com/1.jpg'}]})
-                mock_method = 'post'
-            else:
-                mock_response.json = AsyncMock(return_value={})
-                mock_method = 'get'
-            
-            # Create async context manager
-            mock_context_manager = AsyncMock()
-            mock_context_manager.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_context_manager.__aexit__ = AsyncMock(return_value=None)
-            
-            with patch('aiohttp.ClientSession') as mock_session_class:
-                mock_session = MagicMock()
-                if mock_method == 'post':
-                    mock_session.post.return_value = mock_context_manager
-                else:
-                    mock_session.get.return_value = mock_context_manager
-                mock_session.close = AsyncMock()
-                mock_session_class.return_value = mock_session
-                
-                # Mock appropriate API keys
-                env_vars = {
-                    'SERPER_API_KEY': 'test_key',
-                    'SERPAPI_KEY': 'test_key',
-                    'UNSPLASH_ACCESS_KEY': 'test_key',
-                    'FLICKR_KEY': 'test_key'
-                }
-                
-                with patch.dict(os.environ, env_vars):
+                mock_response = Mock()
+                mock_response.json.return_value = {'images': [{'imageUrl': 'http://test.com/1.jpg'}]}
+                mock_response.raise_for_status = Mock()
+
+                with patch('requests.post', return_value=mock_response) as mock_post, \
+                     patch.dict(os.environ, env_vars):
                     urls = await search_images(query, engine=engine, limit=5)
-                
-                # Should return a list (content depends on mocked response)
-                assert isinstance(urls, list)
+
+                mock_post.assert_called_once()
+            else:
+                mock_response = AsyncMock()
+                mock_response.status = 200
+                mock_response.json = AsyncMock(return_value={})
+
+                mock_context_manager = AsyncMock()
+                mock_context_manager.__aenter__ = AsyncMock(return_value=mock_response)
+                mock_context_manager.__aexit__ = AsyncMock(return_value=None)
+
+                with patch('aiohttp.ClientSession') as mock_session_class:
+                    mock_session = MagicMock()
+                    mock_session.get.return_value = mock_context_manager
+                    mock_session.close = AsyncMock()
+                    mock_session_class.return_value = mock_session
+
+                    with patch.dict(os.environ, env_vars):
+                        urls = await search_images(query, engine=engine, limit=5)
+
+            # Should return a list (content depends on mocked response)
+            assert isinstance(urls, list)
     
     def test_invalid_engine_raises_error(self):
         """
