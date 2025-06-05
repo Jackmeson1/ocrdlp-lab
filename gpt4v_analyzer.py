@@ -335,7 +335,7 @@ if __name__ == "__main__":
     import sys
     
     # 设置图像目录
-    image_dir = "invoice_images"
+    image_dir = "datasets/invoice_dataset/images"
     if len(sys.argv) > 1:
         image_dir = sys.argv[1]
     

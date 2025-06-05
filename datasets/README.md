@@ -26,7 +26,7 @@ dataset_name/
 import json
 
 def load_dataset(dataset_path):
-    labels_path = f"{dataset_path}/labels/invoice_labels.jsonl"
+    labels_path = f"{dataset_path}/labels/<dataset>_labels.jsonl"
     with open(labels_path, 'r') as f:
         return [json.loads(line) for line in f]
 
@@ -45,6 +45,6 @@ python ocrdlp.py pipeline "document_type" --output-dir ./datasets/new_dataset --
 
 # Manual workflow
 python ocrdlp.py search "document_type" --limit 100 --output urls.txt
-python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/raw_images
-python ocrdlp.py classify ./datasets/raw_images --output ./datasets/new_dataset/labels.jsonl
+python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/new_dataset/images
+python ocrdlp.py classify ./datasets/new_dataset/images --output ./datasets/new_dataset/labels/new_dataset_labels.jsonl
 ``` 
