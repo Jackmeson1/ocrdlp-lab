@@ -45,10 +45,10 @@ class GPT4VAnalyzer:
     def analyze_invoice(self, image_path: str) -> dict[str, Any]:
         """Analyze invoice image using GPT-4V."""
 
-        # 编码图像
+        # Encode image
         base64_image = self.encode_image(image_path)
 
-        # 构建提示词
+        # Build the analysis prompt
         prompt = """
         请分析这张发票图像，提取以下结构化信息并以JSON格式返回：
 
@@ -95,7 +95,7 @@ class GPT4VAnalyzer:
         5. 只返回JSON，不要其他解释文字
         """
 
-        # 构建请求
+        # Build request payload
         payload = {
             "model": "gpt-4o",
             "messages": [
@@ -117,7 +117,7 @@ class GPT4VAnalyzer:
             "temperature": 0.1,
         }
 
-        # 发送请求
+        # Send request
         try:
             response = requests.post(
                 self.base_url,
@@ -129,12 +129,12 @@ class GPT4VAnalyzer:
             if response.status_code == 200:
                 result = response.json()
 
-                # 提取GPT-4V的响应
+                # Extract the GPT-4V response
                 content = result['choices'][0]['message']['content']
 
-                # 尝试解析JSON
+                # Attempt to parse JSON
                 try:
-                    # 清理响应文本，提取JSON部分
+                    # Clean response text and extract JSON section
                     if '```json' in content:
                         json_start = content.find('```json') + 7
                         json_end = content.find('```', json_start)
@@ -146,7 +146,7 @@ class GPT4VAnalyzer:
 
                     extracted_data = json.loads(content)
 
-                    # 添加元数据
+                    # Add metadata to the parsed result
                     extracted_data['_metadata'] = {
                         'image_path': image_path,
                         'image_info': self.get_image_info(image_path),
@@ -188,9 +188,9 @@ class GPT4VAnalyzer:
 
 
 def analyze_invoice_images(image_dir: str, output_file: str = "tags.jsonl"):
-    """分析发票图像并保存结果到JSONL文件."""
+    """Analyze invoice images and save results to a JSONL file."""
 
-    # 检查OpenAI API密钥
+    # Check OpenAI API key
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
         print("❌ OPENAI_API_KEY not found!")
@@ -198,7 +198,7 @@ def analyze_invoice_images(image_dir: str, output_file: str = "tags.jsonl"):
 
     analyzer = GPT4VAnalyzer(api_key)
 
-    # 查找图像文件
+    # Find image files in the directory
     image_dir = Path(image_dir)
     image_files = []
     for ext in ['*.jpg', '*.jpeg', '*.png', '*.webp']:
@@ -210,7 +210,7 @@ def analyze_invoice_images(image_dir: str, output_file: str = "tags.jsonl"):
 
     print(f"🔍 Found {len(image_files)} images to analyze")
 
-    # 分析每张图像
+    # Analyze each image
     results = []
     for i, image_path in enumerate(image_files, 1):
         print(f"\n📊 Analyzing image {i}/{len(image_files)}: {image_path.name}")
@@ -219,7 +219,7 @@ def analyze_invoice_images(image_dir: str, output_file: str = "tags.jsonl"):
             result = analyzer.analyze_invoice(str(image_path))
             results.append(result)
 
-            # 显示结果摘要
+            # Show a brief summary
             if 'error' not in result:
                 print(f"  ✅ 文档类型: {result.get('document_type', 'N/A')}")
                 print(
@@ -242,7 +242,7 @@ def analyze_invoice_images(image_dir: str, output_file: str = "tags.jsonl"):
             results.append(error_result)
             print(f"  ❌ 处理异常: {e}")
 
-    # 保存到JSONL文件
+    # Save results to JSONL file
     output_path = Path(output_file)
     with open(output_path, 'w', encoding='utf-8') as f:
         for result in results:
@@ -251,7 +251,7 @@ def analyze_invoice_images(image_dir: str, output_file: str = "tags.jsonl"):
     print(f"\n💾 Results saved to: {output_path}")
     print(f"📊 Total analyzed: {len(results)} images")
 
-    # 统计成功率
+    # Report success rate
     successful = sum(1 for r in results if 'error' not in r)
     print(f"✅ Successful: {successful}/{len(results)} ({successful/len(results)*100:.1f}%)")
 
@@ -259,7 +259,7 @@ def analyze_invoice_images(image_dir: str, output_file: str = "tags.jsonl"):
 
 
 def validate_extracted_fields(jsonl_file: str = "tags.jsonl"):
-    """验证提取的字段是否齐全."""
+    """Check that the extracted fields are complete."""
 
     print(f"\n🔍 Validating extracted fields from {jsonl_file}")
 
@@ -297,7 +297,7 @@ def validate_extracted_fields(jsonl_file: str = "tags.jsonl"):
                         f"\n  📄 Record {i} ({data.get('_metadata', {}).get('image_path', 'unknown')}):"
                     )
 
-                    # 检查必需字段
+                    # Check required fields
                     missing_required = []
                     present_required = []
                     for field in required_fields:
@@ -306,7 +306,7 @@ def validate_extracted_fields(jsonl_file: str = "tags.jsonl"):
                         else:
                             missing_required.append(field)
 
-                    # 检查可选字段
+                    # Check optional fields
                     present_optional = []
                     for field in optional_fields:
                         if field in data and data[field] is not None:
@@ -322,7 +322,7 @@ def validate_extracted_fields(jsonl_file: str = "tags.jsonl"):
                     if missing_required:
                         print(f"    ❌ Missing required: {', '.join(missing_required)}")
 
-                    # 显示关键信息
+                    # Display key information
                     key_info = {
                         '文档类型': data.get('document_type'),
                         '语言': data.get('language'),
@@ -345,22 +345,22 @@ def validate_extracted_fields(jsonl_file: str = "tags.jsonl"):
 if __name__ == "__main__":
     import sys
 
-    # 设置图像目录
+    # Set the image directory
     image_dir = "datasets/invoice_dataset/images"
     if len(sys.argv) > 1:
         image_dir = sys.argv[1]
 
-    # 检查API密钥
+    # Verify API key
     if not os.getenv('OPENAI_API_KEY'):
         print("❌ Please set OPENAI_API_KEY environment variable")
         print("Example: $env:OPENAI_API_KEY='your-api-key-here'")
         exit(1)
 
-    # 运行分析
+    # Run the analysis
     print("🚀 Starting GPT-4V Invoice Analysis")
     results = analyze_invoice_images(image_dir)
 
-    # 验证字段
+    # Validate extracted fields
     if results:
         validate_extracted_fields()
 
