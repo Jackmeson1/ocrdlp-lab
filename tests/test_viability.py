@@ -173,14 +173,14 @@ async def test_project_viability():
 @pytest.mark.asyncio
 async def test_search_timeout_handled(caplog):
     """search_images should log an error and return empty list on timeout."""
-    caplog.set_level(logging.ERROR, logger="crawler.search")
+    caplog.set_level(logging.WARNING, logger="crawler.search")
     with (
         patch.dict(os.environ, {"SERPER_API_KEY": "test"}),
         patch("requests.post", side_effect=requests.exceptions.Timeout),
     ):
         urls = await search_images("test", engine="serper", limit=1)
     assert urls == []
-    assert "Serper search error" in caplog.text
+    assert "Serper search timed out" in caplog.text
 
 
 @pytest.mark.asyncio

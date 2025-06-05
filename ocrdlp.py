@@ -38,16 +38,18 @@ class OCRDLPCli:
             return False
         return True
     
-    async def search_command(self, args):
+    def search_command(self, args):
         """Search for images based on query"""
         print(f"🔍 Searching for images: '{args.query}'")
         print(f"📊 Engine: {args.engine}, Limit: {args.limit}")
         
         try:
-            urls = await search_images(
-                query=args.query,
-                engine=args.engine,
-                limit=args.limit
+            urls = asyncio.run(
+                search_images(
+                    query=args.query,
+                    engine=args.engine,
+                    limit=args.limit,
+                )
             )
             
             if urls:
@@ -73,7 +75,7 @@ class OCRDLPCli:
         
         return 0
     
-    async def download_command(self, args):
+    def download_command(self, args):
         """Download images from URLs or search results"""
         print(f"📥 Downloading images to: {args.output_dir}")
         
@@ -94,10 +96,12 @@ class OCRDLPCli:
         elif args.query:
             # Search for images first
             print(f"🔍 Searching for: '{args.query}'")
-            urls = await search_images(
-                query=args.query,
-                engine=args.engine,
-                limit=args.limit
+            urls = asyncio.run(
+                search_images(
+                    query=args.query,
+                    engine=args.engine,
+                    limit=args.limit,
+                )
             )
         else:
             print("❌ Either --query or --urls-file must be provided")
@@ -110,7 +114,7 @@ class OCRDLPCli:
         print(f"📥 Downloading {len(urls)} images...")
         
         try:
-            results = await download_images(urls, output_dir=str(output_dir))
+            results = asyncio.run(download_images(urls, output_dir=str(output_dir)))
             
             if results:
                 print(f"✅ Downloaded {len(results)} images successfully")
@@ -126,7 +130,7 @@ class OCRDLPCli:
         
         return 0
     
-    async def classify_command(self, args):
+    def classify_command(self, args):
         """Classify images in a directory"""
         print(f"🤖 Classifying images in: {args.input_dir}")
         print(f"💾 Output file: {args.output}")
@@ -137,9 +141,11 @@ class OCRDLPCli:
             return 1
         
         try:
-            results = await classify_images_batch(
-                image_dir=str(input_dir),
-                output_file=args.output
+            results = asyncio.run(
+                classify_images_batch(
+                    image_dir=str(input_dir),
+                    output_file=args.output,
+                )
             )
             
             if results:
@@ -164,7 +170,7 @@ class OCRDLPCli:
         
         return 0
     
-    async def pipeline_command(self, args):
+    def pipeline_command(self, args):
         """Run complete pipeline: search -> download -> classify"""
         print(f"🚀 Running complete pipeline for: '{args.query}'")
         
@@ -179,10 +185,12 @@ class OCRDLPCli:
         try:
             # Step 1: Search
             print(f"\n🔍 Step 1: Searching for images...")
-            urls = await search_images(
-                query=args.query,
-                engine=args.engine,
-                limit=args.limit
+            urls = asyncio.run(
+                search_images(
+                    query=args.query,
+                    engine=args.engine,
+                    limit=args.limit,
+                )
             )
             
             if not urls:
@@ -193,7 +201,7 @@ class OCRDLPCli:
             
             # Step 2: Download
             print(f"\n📥 Step 2: Downloading images...")
-            results = await download_images(urls, output_dir=str(images_dir))
+            results = asyncio.run(download_images(urls, output_dir=str(images_dir)))
             
             if not results:
                 print("❌ No images downloaded")
@@ -206,9 +214,11 @@ class OCRDLPCli:
 
             output_file = labels_dir / f"{dataset_name}_labels.jsonl"
             
-            classification_results = await classify_images_batch(
-                image_dir=str(images_dir),
-                output_file=str(output_file)
+            classification_results = asyncio.run(
+                classify_images_batch(
+                    image_dir=str(images_dir),
+                    output_file=str(output_file),
+                )
             )
             
             if classification_results:
@@ -226,7 +236,7 @@ class OCRDLPCli:
         
         return 0
     
-    async def validate_command(self, args):
+    def validate_command(self, args):
         """Validate classification results"""
         print(f"🔍 Validating classification file: {args.input}")
         
@@ -325,7 +335,7 @@ Examples:
         
         return parser
     
-    async def run(self, args=None):
+    def run(self, args=None):
         """Main entry point"""
         parser = self.create_parser()
         parsed_args = parser.parse_args(args)
@@ -341,15 +351,15 @@ Examples:
         
         # Route to appropriate command
         if parsed_args.command == 'search':
-            return await self.search_command(parsed_args)
+            return self.search_command(parsed_args)
         elif parsed_args.command == 'download':
-            return await self.download_command(parsed_args)
+            return self.download_command(parsed_args)
         elif parsed_args.command == 'classify':
-            return await self.classify_command(parsed_args)
+            return self.classify_command(parsed_args)
         elif parsed_args.command == 'pipeline':
-            return await self.pipeline_command(parsed_args)
+            return self.pipeline_command(parsed_args)
         elif parsed_args.command == 'validate':
-            return await self.validate_command(parsed_args)
+            return self.validate_command(parsed_args)
         else:
             parser.print_help()
             return 1
@@ -360,7 +370,7 @@ def main():
     cli = OCRDLPCli()
     
     try:
-        exit_code = asyncio.run(cli.run())
+        exit_code = cli.run()
         sys.exit(exit_code)
     except KeyboardInterrupt:
         print("\n❌ Operation cancelled by user")
