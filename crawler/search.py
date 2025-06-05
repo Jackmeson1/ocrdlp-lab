@@ -2,7 +2,6 @@
 Unified image search interface supporting multiple search engines.
 """
 
-import aiohttp
 import requests
 import os
 import logging
@@ -13,7 +12,7 @@ from urllib.parse import urlparse
 class ImageSearchEngine:
     """Unified image search engine supporting multiple providers."""
 
-    def __init__(self, session: Optional[aiohttp.ClientSession] = None):
+    def __init__(self, session: Optional[object] = None):
         self.session = session
         self.logger = logging.getLogger(__name__)
 
@@ -163,7 +162,7 @@ class ImageSearchEngine:
 
 # Convenience function for direct usage
 async def search_images(query: str, engine: str = "serper", limit: int = 100,
-                       session: Optional[aiohttp.ClientSession] = None) -> List[str]:
+                       session: Optional[object] = None) -> List[str]:
     """
     Convenience function for searching images with a unified interface.
 
@@ -171,18 +170,15 @@ async def search_images(query: str, engine: str = "serper", limit: int = 100,
         query: Search query string
         engine: Search engine to use ("serper", "serpapi", "unsplash", "flickr")
         limit: Maximum number of URLs to return
-        session: Optional aiohttp session (will create one if not provided)
+        session: Optional session object (requests.Session)
 
     Returns:
         List of image URLs
     """
     close_session = False
     if session is None:
-        timeout = aiohttp.ClientTimeout(total=30)
-        session = aiohttp.ClientSession(
-            timeout=timeout,
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        )
+        session = requests.Session()
+        session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
         close_session = True
 
     try:
@@ -190,19 +186,19 @@ async def search_images(query: str, engine: str = "serper", limit: int = 100,
         return await search_engine.search_images(query, engine, limit)
     finally:
         if close_session:
-            await session.close()
+            session.close()
 
 
 # Download function for testing
 async def download_images(urls: List[str], output_dir: str = "test_downloads",
-                         session: Optional[aiohttp.ClientSession] = None) -> Dict[str, str]:
+                         session: Optional[object] = None) -> Dict[str, str]:
     """
     Download images from URLs for testing purposes.
 
     Args:
         urls: List of image URLs to download
         output_dir: Directory to save images
-        session: Optional aiohttp session
+        session: Optional session object
 
     Returns:
         Dictionary mapping URLs to local file paths
@@ -215,11 +211,8 @@ async def download_images(urls: List[str], output_dir: str = "test_downloads",
 
     close_session = False
     if session is None:
-        timeout = aiohttp.ClientTimeout(total=30)
-        session = aiohttp.ClientSession(
-            timeout=timeout,
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        )
+        session = requests.Session()
+        session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
         close_session = True
 
     results = {}
@@ -228,39 +221,38 @@ async def download_images(urls: List[str], output_dir: str = "test_downloads",
     try:
         for i, url in enumerate(urls):
             try:
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        content = await response.read()
+                response = session.get(url, timeout=30)
+                if response.status_code == 200:
+                    content = response.content
 
-                        # Determine file extension
-                        content_type = response.headers.get('content-type', '')
-                        if 'jpeg' in content_type or 'jpg' in content_type:
-                            ext = '.jpg'
-                        elif 'png' in content_type:
-                            ext = '.png'
-                        elif 'webp' in content_type:
-                            ext = '.webp'
-                        else:
-                            # Try to guess from URL
-                            parsed = urlparse(url)
-                            path_ext = os.path.splitext(parsed.path)[1].lower()
-                            ext = path_ext if path_ext in ['.jpg', '.jpeg', '.png', '.webp'] else '.jpg'
-
-                        filename = f"image_{i:06d}{ext}"
-                        filepath = output_path / filename
-
-                        # Save image
-                        async with aiofiles.open(filepath, 'wb') as f:
-                            await f.write(content)
-
-                        results[url] = str(filepath)
-                        logger.info(f"Downloaded: {filename}")
+                    # Determine file extension
+                    content_type = response.headers.get('content-type', '')
+                    if 'jpeg' in content_type or 'jpg' in content_type:
+                        ext = '.jpg'
+                    elif 'png' in content_type:
+                        ext = '.png'
+                    elif 'webp' in content_type:
+                        ext = '.webp'
                     else:
-                        logger.warning(f"Failed to download {url}: HTTP {response.status}")
+                        parsed = urlparse(url)
+                        path_ext = os.path.splitext(parsed.path)[1].lower()
+                        ext = path_ext if path_ext in ['.jpg', '.jpeg', '.png', '.webp'] else '.jpg'
+
+                    filename = f"image_{i:06d}{ext}"
+                    filepath = output_path / filename
+
+                    # Save image
+                    async with aiofiles.open(filepath, 'wb') as f:
+                        await f.write(content)
+
+                    results[url] = str(filepath)
+                    logger.info(f"Downloaded: {filename}")
+                else:
+                    logger.warning(f"Failed to download {url}: HTTP {response.status_code}")
             except Exception as e:
                 logger.error(f"Error downloading {url}: {e}")
     finally:
         if close_session:
-            await session.close()
+            session.close()
 
     return results

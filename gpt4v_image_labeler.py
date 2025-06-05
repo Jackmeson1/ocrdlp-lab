@@ -10,7 +10,7 @@ import base64
 import asyncio
 from pathlib import Path
 from typing import Dict, List, Any
-import aiohttp
+import requests
 from PIL import Image
 
 
@@ -108,77 +108,65 @@ class GPT4VImageLabeler:
             "temperature": 0.1
         }
         
-        # Send request
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(
-                    self.base_url, 
-                    headers=self.headers, 
-                    json=payload,
-                    timeout=aiohttp.ClientTimeout(total=60)
-                ) as response:
-                    
-                    if response.status == 200:
-                        result = await response.json()
-                        
-                        # Extract GPT-4V response
-                        content = result['choices'][0]['message']['content']
-                        
-                        # Parse JSON
-                        try:
-                            # Clean response text, extract JSON part
-                            if '```json' in content:
-                                json_start = content.find('```json') + 7
-                                json_end = content.find('```', json_start)
-                                content = content[json_start:json_end].strip()
-                            elif '{' in content:
-                                json_start = content.find('{')
-                                json_end = content.rfind('}') + 1
-                                content = content[json_start:json_end]
-                            
-                            classification_data = json.loads(content)
-                            
-                            # Add metadata
-                            classification_data['_metadata'] = {
-                                'image_path': image_path,
-                                'image_info': self.get_image_info(image_path),
-                                'classification_timestamp': asyncio.get_event_loop().time(),
-                                'model_used': 'gpt-4o',
-                                'api_response_tokens': result.get('usage', {}),
-                                'purpose': 'OCR_DLP_performance_testing'
-                            }
-                            
-                            return classification_data
-                            
-                        except json.JSONDecodeError as e:
-                            return {
-                                'error': 'JSON解析失败',
-                                'raw_response': content,
-                                'json_error': str(e),
-                                '_metadata': {
-                                    'image_path': image_path,
-                                    'image_info': self.get_image_info(image_path)
-                                }
-                            }
-                    else:
-                        error_text = await response.text()
-                        return {
-                            'error': f'API请求失败: {response.status}',
-                            'error_details': error_text,
-                            '_metadata': {
-                                'image_path': image_path,
-                                'image_info': self.get_image_info(image_path)
-                            }
-                        }
-                        
-            except Exception as e:
-                return {
-                    'error': f'请求异常: {str(e)}',
-                    '_metadata': {
-                        'image_path': image_path,
-                        'image_info': self.get_image_info(image_path)
+        # Send request synchronously using requests
+        try:
+            response = requests.post(
+                self.base_url,
+                headers=self.headers,
+                json=payload,
+                timeout=60,
+            )
+            if response.status_code == 200:
+                result = response.json()
+                content = result["choices"][0]["message"]["content"]
+
+                try:
+                    if "```json" in content:
+                        json_start = content.find("```json") + 7
+                        json_end = content.find("```", json_start)
+                        content = content[json_start:json_end].strip()
+                    elif "{" in content:
+                        json_start = content.find("{")
+                        json_end = content.rfind("}") + 1
+                        content = content[json_start:json_end]
+
+                    classification_data = json.loads(content)
+                    classification_data["_metadata"] = {
+                        "image_path": image_path,
+                        "image_info": self.get_image_info(image_path),
+                        "classification_timestamp": asyncio.get_event_loop().time(),
+                        "model_used": "gpt-4o",
+                        "api_response_tokens": result.get("usage", {}),
+                        "purpose": "OCR_DLP_performance_testing",
                     }
+                    return classification_data
+                except json.JSONDecodeError as e:
+                    return {
+                        "error": "JSON解析失败",
+                        "raw_response": content,
+                        "json_error": str(e),
+                        "_metadata": {
+                            "image_path": image_path,
+                            "image_info": self.get_image_info(image_path),
+                        },
+                    }
+            else:
+                return {
+                    "error": f"API请求失败: {response.status_code}",
+                    "error_details": response.text,
+                    "_metadata": {
+                        "image_path": image_path,
+                        "image_info": self.get_image_info(image_path),
+                    },
                 }
+        except Exception as e:
+            return {
+                "error": f"请求异常: {str(e)}",
+                "_metadata": {
+                    "image_path": image_path,
+                    "image_info": self.get_image_info(image_path),
+                },
+            }
 
 
 async def classify_images_batch(image_dir: str, output_file: str = "image_labels.jsonl"):
