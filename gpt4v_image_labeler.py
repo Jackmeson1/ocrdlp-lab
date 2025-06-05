@@ -4,13 +4,16 @@ GPT-4V Image Labeling Script
 Classifies images into fine-grained categories for OCR_DLP system testing.
 """
 
-import os
-import json
-import base64
 import asyncio
+
+import base64
+import io
+import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
+
 import requests
 import requests.exceptions
 from PIL import Image
@@ -18,21 +21,33 @@ from PIL import Image
 
 class GPT4VImageLabeler:
     """GPT-4V image labeler for document classification."""
-    
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://api.openai.com/v1/chat/completions"
-        self.headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
-    
+        self.headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+
     def encode_image(self, image_path: str) -> str:
-        """Encode image to base64."""
-        with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
-    
-    def get_image_info(self, image_path: str) -> Dict[str, Any]:
+        """Encode image to base64.
+
+        Images larger than 4 MB are re-encoded with Pillow at reduced quality to
+        avoid exceeding API upload limits.
+        """
+
+        file_size = os.path.getsize(image_path)
+        if file_size <= 4 * 1024 * 1024:
+            with open(image_path, "rb") as image_file:
+                return base64.b64encode(image_file.read()).decode("utf-8")
+
+        # Re-encode large images at lower quality
+        with Image.open(image_path) as img:
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            buffer = io.BytesIO()
+            img.save(buffer, format="JPEG", quality=85)
+            return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    def get_image_info(self, image_path: str) -> dict[str, Any]:
         """Get basic image information."""
         try:
             with Image.open(image_path) as img:
@@ -41,17 +56,17 @@ class GPT4VImageLabeler:
                     "height": img.height,
                     "format": img.format,
                     "mode": img.mode,
-                    "size_bytes": os.path.getsize(image_path)
+                    "size_bytes": os.path.getsize(image_path),
                 }
         except Exception as e:
             return {"error": str(e)}
-    
-    def _classify_image_sync(self, image_path: str) -> Dict[str, Any]:
+
+    def _classify_image_sync(self, image_path: str) -> dict[str, Any]:
         """Synchronously classify an image using the GPT-4V API."""
-        
+
         # Encode image
         base64_image = self.encode_image(image_path)
-        
+
         # Build classification prompt
         prompt = """
         Please classify this image for OCR_DLP system performance testing. Return classification labels in JSON format:
@@ -84,7 +99,7 @@ class GPT4VImageLabeler:
         5. Return only JSON, no other explanatory text
         6. Use English for all field values
         """
-        
+
         # Build request
         payload = {
             "model": "gpt-4o",
@@ -92,24 +107,21 @@ class GPT4VImageLabeler:
                 {
                     "role": "user",
                     "content": [
-                        {
-                            "type": "text",
-                            "text": prompt
-                        },
+                        {"type": "text", "text": prompt},
                         {
                             "type": "image_url",
                             "image_url": {
                                 "url": f"data:image/jpeg;base64,{base64_image}",
-                                "detail": "high"
-                            }
-                        }
-                    ]
+                                "detail": "high",
+                            },
+                        },
+                    ],
                 }
             ],
             "max_tokens": 1500,
-            "temperature": 0.1
+            "temperature": 0.1,
         }
-        
+
         # Send request synchronously. The caller may choose to run this in a
         # thread pool to avoid blocking the event loop.
         try:
@@ -198,60 +210,59 @@ class GPT4VImageLabeler:
                 },
             }
 
-    async def classify_image(self, image_path: str) -> Dict[str, Any]:
+    async def classify_image(self, image_path: str) -> dict[str, Any]:
         """Asynchronously classify an image by running the sync logic in a thread."""
         return await asyncio.to_thread(self._classify_image_sync, image_path)
 
 
 async def classify_images_batch(image_dir: str, output_file: str = "labels.jsonl"):
     """Classify images in batch and save results to JSONL file."""
-    
+
     # Check OpenAI API key
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
         print("❌ OPENAI_API_KEY environment variable not found")
         return
-    
+
     # Initialize labeler
     labeler = GPT4VImageLabeler(api_key)
-    
+
     # Find image files
     image_dir = Path(image_dir)
     if not image_dir.exists():
         print(f"❌ Image directory not found: {image_dir}")
         return
-    
+
     image_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'}
-    image_files = [f for f in image_dir.iterdir() 
-                   if f.suffix.lower() in image_extensions]
-    
+    image_files = [f for f in image_dir.iterdir() if f.suffix.lower() in image_extensions]
+
     if not image_files:
         print(f"❌ No image files found in: {image_dir}")
         return
-    
+
     print(f"🔍 Found {len(image_files)} image files")
-    
+
     # Process images
     results = []
     with open(output_file, 'w', encoding='utf-8') as f:
         for i, image_file in enumerate(image_files, 1):
             print(f"\n📸 Processing {i}/{len(image_files)}: {image_file.name}")
-            
+
             try:
                 # Classify image
                 result = await labeler.classify_image(str(image_file))
-                
+
                 # Add file info
                 result['_file_info'] = {
                     'filename': image_file.name,
                     'file_path': str(image_file),
-                    'processing_order': i
+                    'processing_order': i,
                 }
-                
+
                 # Save to JSONL
                 f.write(json.dumps(result, ensure_ascii=False) + '\n')
                 f.flush()
-                
+
                 # Show classification summary
                 if 'error' not in result:
                     print(f"  ✅ Category: {result.get('document_category', 'N/A')}")
@@ -261,131 +272,133 @@ async def classify_images_batch(image_dir: str, output_file: str = "labels.jsonl
                     print(f"  🎯 Confidence: {result.get('confidence_score', 'N/A')}")
                 else:
                     print(f"  ❌ Error: {result['error']}")
-                
+
                 results.append(result)
-                
+
             except Exception as e:
                 error_result = {
                     'error': f'Processing failed: {str(e)}',
                     '_file_info': {
                         'filename': image_file.name,
                         'file_path': str(image_file),
-                        'processing_order': i
-                    }
+                        'processing_order': i,
+                    },
                 }
                 f.write(json.dumps(error_result, ensure_ascii=False) + '\n')
                 f.flush()
                 print(f"  ❌ Processing failed: {e}")
                 results.append(error_result)
-    
-    print(f"\n✅ Classification completed!")
+
+    print("\n✅ Classification completed!")
     print(f"📁 Results saved to: {output_file}")
-    
+
     # Generate summary
     generate_classification_summary(results, output_file)
-    
+
     return results
 
 
-def generate_classification_summary(results: List[Dict], output_file: str):
+def generate_classification_summary(results: list[dict], output_file: str):
     """Generate classification summary report."""
-    
+
     total_images = len(results)
     successful = sum(1 for r in results if 'error' not in r)
     failed = total_images - successful
-    
+
     # Count categories
     categories = {}
     difficulties = {}
     languages = {}
-    
+
     for result in results:
         if 'error' not in result:
             # Document categories
             cat = result.get('document_category', 'Unknown')
             categories[cat] = categories.get(cat, 0) + 1
-            
+
             # OCR difficulties
             diff = result.get('ocr_difficulty', 'Unknown')
             difficulties[diff] = difficulties.get(diff, 0) + 1
-            
+
             # Languages
             lang = result.get('language_primary', 'Unknown')
             languages[lang] = languages.get(lang, 0) + 1
-    
+
     # Generate report
     report_file = output_file.replace('.jsonl', '_summary.md')
     with open(report_file, 'w', encoding='utf-8') as f:
         f.write("# Image Classification Summary Report\n")
         f.write("=" * 50 + "\n\n")
-        
+
         f.write("## Overview\n")
         f.write(f"- Total Images: {total_images}\n")
         f.write(f"- Successfully Classified: {successful}\n")
         f.write(f"- Failed: {failed}\n")
         success_rate = successful / total_images * 100 if total_images else 0
         f.write(f"- Success Rate: {success_rate:.1f}%\n\n")
-        
+
         f.write("## Document Categories\n")
         for cat, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
             percentage = count / successful * 100 if successful else 0.0
             f.write(f"- {cat}: {count} ({percentage:.1f}%)\n")
         f.write("\n")
-        
+
         f.write("## OCR Difficulty Distribution\n")
         for diff, count in sorted(difficulties.items(), key=lambda x: x[1], reverse=True):
             percentage = count / successful * 100 if successful else 0.0
             f.write(f"- {diff}: {count} ({percentage:.1f}%)\n")
         f.write("\n")
-        
+
         f.write("## Language Distribution\n")
         for lang, count in sorted(languages.items(), key=lambda x: x[1], reverse=True):
             percentage = count / successful * 100 if successful else 0.0
             f.write(f"- {lang}: {count} ({percentage:.1f}%)\n")
         f.write("\n")
-    
+
     print(f"📊 Summary report saved to: {report_file}")
 
 
 def validate_classification_labels(jsonl_file: str = "labels.jsonl"):
     """Validate classification labels and generate quality report."""
-    
+
     if not os.path.exists(jsonl_file):
         print(f"❌ File not found: {jsonl_file}")
         return
-    
+
     print(f"🔍 Validating classification labels in: {jsonl_file}")
-    
+
     # Required fields for classification
     required_fields = [
-        'document_category', 'document_subcategory', 'language_primary',
-        'text_clarity', 'image_quality', 'ocr_difficulty'
+        'document_category',
+        'document_subcategory',
+        'language_primary',
+        'text_clarity',
+        'image_quality',
+        'ocr_difficulty',
     ]
-    
+
     # Optional but important fields
-    important_fields = [
-        'sensitive_data_types', 'testing_scenarios', 'challenge_factors'
-    ]
-    
+    important_fields = ['sensitive_data_types', 'testing_scenarios', 'challenge_factors']
+
     results = []
-    with open(jsonl_file, 'r', encoding='utf-8') as f:
+    with open(jsonl_file, encoding='utf-8') as f:
         for line_num, line in enumerate(f, 1):
             try:
                 data = json.loads(line.strip())
                 results.append(data)
             except json.JSONDecodeError as e:
                 print(f"❌ Line {line_num}: Invalid JSON - {e}")
-    
+
     print(f"📊 Loaded {len(results)} classification records")
-    
+
     # Validation statistics
     valid_count = 0
-    field_completeness = {field: 0 for field in required_fields + important_fields}
-    
+    field_completeness = dict.fromkeys(required_fields + important_fields, 0)
+
     for result in results:
         if 'error' in result:
             continue
-            
+
         # Check required fields
         has_all_required = True
         for field in required_fields:
@@ -393,47 +406,53 @@ def validate_classification_labels(jsonl_file: str = "labels.jsonl"):
                 field_completeness[field] += 1
             else:
                 has_all_required = False
-        
+
         # Check important fields
         for field in important_fields:
             if field in result and result[field] is not None:
                 field_completeness[field] += 1
-        
+
         if has_all_required:
             valid_count += 1
-    
+
     # Generate validation report
-    print(f"\n📋 Validation Results:")
-    print(f"✅ Valid classifications: {valid_count}/{len(results)} ({valid_count/len(results)*100:.1f}%)")
-    
-    print(f"\n📊 Field Completeness:")
+    print("\n📋 Validation Results:")
+    print(
+        f"✅ Valid classifications: {valid_count}/{len(results)} ({valid_count/len(results)*100:.1f}%)"
+    )
+
+    print("\n📊 Field Completeness:")
     for field, count in field_completeness.items():
         percentage = count / len(results) * 100
-        status = "✅" if field in required_fields and percentage >= 90 else "⚠️" if percentage >= 70 else "❌"
+        status = (
+            "✅"
+            if field in required_fields and percentage >= 90
+            else "⚠️" if percentage >= 70 else "❌"
+        )
         print(f"  {status} {field}: {count}/{len(results)} ({percentage:.1f}%)")
-    
+
     return {
         'total_records': len(results),
         'valid_classifications': valid_count,
-        'field_completeness': field_completeness
+        'field_completeness': field_completeness,
     }
 
 
 if __name__ == "__main__":
     import sys
-    
+
     if len(sys.argv) < 2:
         print("Usage: python gpt4v_image_labeler.py <image_directory> [output_file]")
         print("Example: python gpt4v_image_labeler.py ./images labels.jsonl")
         sys.exit(1)
-    
+
     image_dir = sys.argv[1]
     output_file = sys.argv[2] if len(sys.argv) > 2 else "labels.jsonl"
-    
+
     # Check API key
     if not os.getenv('OPENAI_API_KEY'):
         print("❌ Please set OPENAI_API_KEY environment variable")
         sys.exit(1)
-    
+
     # Run classification
-    asyncio.run(classify_images_batch(image_dir, output_file)) 
+    asyncio.run(classify_images_batch(image_dir, output_file))
