@@ -69,15 +69,12 @@ python ocrdlp.py search "invoice documents" --engine serper --limit 100 --output
 
 ```bash
 # Download images directly into the dataset
-python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/invoice_dataset/images
+python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/invoice_dataset
 ```
 
 ### 3. Generate Dataset with Labels
 
 ```bash
-# Create label directory
-mkdir -p datasets/invoice_dataset/labels
-
 # Generate comprehensive labels
 python ocrdlp.py classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/invoice_dataset_labels.jsonl
 ```
@@ -156,24 +153,24 @@ python ocrdlp.py search "document type" --engine serper --limit 50 --output urls
 
 ### Download Command
 ```bash
-python ocrdlp.py download --urls-file urls.txt --output-dir ./images
+python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/invoice_dataset
 # OR
-python ocrdlp.py download --query "invoice" --output-dir ./images --limit 20
+python ocrdlp.py download --query "invoice" --output-dir ./datasets/invoice_dataset --limit 20
 ```
 
 ### Classify Command
 ```bash
-python ocrdlp.py classify ./images --output invoice_labels.jsonl --validate
+python ocrdlp.py classify ./datasets/invoice_dataset/images --output ./datasets/invoice_dataset/labels/invoice_dataset_labels.jsonl --validate
 ```
 
 ### Pipeline Command (Complete Workflow)
 ```bash
-python ocrdlp.py pipeline "invoice documents" --output-dir ./invoice_dataset --limit 50
+python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoice_dataset --limit 50
 ```
 
 ### Validate Command
 ```bash
-python ocrdlp.py validate invoice_labels.jsonl
+python ocrdlp.py validate ./datasets/invoice_dataset/labels/invoice_dataset_labels.jsonl
 ```
 
 ## 🎉 Example: Creating Invoice Dataset
@@ -184,7 +181,7 @@ python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoices -
 
 # Dataset is now ready at ./datasets/invoices/
 # - images/ contains downloaded invoice images
-# - labels/invoice_dataset_labels.jsonl contains comprehensive labels
+# - labels/invoices_labels.jsonl contains comprehensive labels
 ```
 
 ## 🛠️ Development
