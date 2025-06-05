@@ -3,6 +3,7 @@ Unified image search interface supporting multiple search engines.
 """
 
 import aiohttp
+import requests
 import os
 import logging
 from typing import List, Dict, Optional
@@ -29,7 +30,7 @@ class ImageSearchEngine:
             List of image URLs
         """
         if engine == "serper":
-            return await self._search_serper(query, limit)
+            return self._search_serper(query, limit)
         elif engine == "serpapi":
             return await self._search_serpapi(query, limit)
         elif engine == "unsplash":
@@ -39,42 +40,35 @@ class ImageSearchEngine:
         else:
             raise ValueError(f"Unsupported search engine: {engine}")
 
-    async def _search_serper(self, query: str, limit: int) -> List[str]:
+    def _search_serper(self, query: str, limit: int) -> List[str]:
         """Search images using Serper.dev API."""
         api_key = os.getenv('SERPER_API_KEY')
         if not api_key:
             self.logger.warning("SERPER_API_KEY not found, skipping Serper search")
             return []
 
-        try:
-            url = "https://google.serper.dev/images"
-            headers = {
-                'X-API-KEY': api_key,
-                'Content-Type': 'application/json'
-            }
-            payload = {
-                'q': query,
-                'num': min(limit, 100)
-            }
+        url = "https://google.serper.dev/images"
+        headers = {
+            'X-API-KEY': api_key,
+            'Content-Type': 'application/json'
+        }
+        payload = {
+            'q': query,
+            'num': min(limit, 100)
+        }
 
-            async with self.session.post(url, json=payload, headers=headers) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    images = data.get('images', [])
-                    urls = []
-                    for img in images:
-                        # Get the original image URL
-                        if 'imageUrl' in img:
-                            urls.append(img['imageUrl'])
-                        elif 'link' in img:
-                            urls.append(img['link'])
-                    return urls[:limit]
-                else:
-                    self.logger.error(f"Serper API error: {response.status}")
-        except Exception as e:
-            self.logger.error(f"Serper search error: {e}")
-
-        return []
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        images = data.get('images', [])
+        urls = []
+        for img in images:
+            # Get the original image URL
+            if 'imageUrl' in img:
+                urls.append(img['imageUrl'])
+            elif 'link' in img:
+                urls.append(img['link'])
+        return urls[:limit]
 
     async def _search_serpapi(self, query: str, limit: int) -> List[str]:
         """Search Google Images via SerpAPI."""
