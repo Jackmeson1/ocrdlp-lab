@@ -13,6 +13,10 @@ The image labeling system is designed to:
 - **Organize images** by document type, quality, and complexity
 - **Support testing scenarios** for compliance and security systems
 
+The current implementation uses the Python `requests` library for all HTTP
+interactions. Network calls are executed within `asyncio` tasks using
+`asyncio.to_thread`, so examples show how to run them with `asyncio.run`.
+
 ## 🔄 Key Difference: Labeling vs Extraction
 
 | Aspect | **Content Extraction** | **Image Labeling** |
@@ -113,9 +117,10 @@ The system identifies images suitable for various OCR_DLP testing scenarios:
 ### Example 1: Single Image Classification
 ```python
 from gpt4v_image_labeler import GPT4VImageLabeler
+import asyncio
 
 labeler = GPT4VImageLabeler(api_key)
-result = await labeler.classify_image("invoice.jpg")
+result = asyncio.run(labeler.classify_image("invoice.jpg"))
 
 print(f"Category: {result['document_category']}")
 print(f"OCR Difficulty: {result['ocr_difficulty']}")
@@ -125,10 +130,13 @@ print(f"Testing Scenarios: {result['testing_scenarios']}")
 ### Example 2: Batch Classification
 ```python
 from gpt4v_image_labeler import classify_images_batch
+import asyncio
 
-results = await classify_images_batch(
-    image_dir="./dataset_images",
-    output_file="invoice_dataset_labels.jsonl"
+results = asyncio.run(
+    classify_images_batch(
+        image_dir="./dataset_images",
+        output_file="invoice_dataset_labels.jsonl"
+    )
 )
 ```
 
