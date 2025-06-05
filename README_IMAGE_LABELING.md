@@ -210,6 +210,8 @@ print(f"Valid classifications: {validation_results['valid_classifications']}")
 - **Rate Limits**: Respects OpenAI API rate limits
 - **Token Usage**: Optimized prompts for efficient token usage
 - **Error Handling**: Comprehensive error handling and retry logic
+- **Large File Handling**: Images bigger than 4&nbsp;MB are automatically
+  re-encoded with Pillow at reduced quality to stay under API limits.
 
 ## 🎯 OCR_DLP Testing Applications
 
