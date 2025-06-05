@@ -8,8 +8,9 @@ import os
 import json
 import base64
 import asyncio
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 import requests
 import requests.exceptions
 from PIL import Image
@@ -143,7 +144,7 @@ class GPT4VImageLabeler:
                     classification_data['_metadata'] = {
                         'image_path': image_path,
                         'image_info': self.get_image_info(image_path),
-                        'classification_timestamp': asyncio.get_event_loop().time(),
+                        'classification_timestamp': datetime.utcnow().isoformat(),
                         'model_used': 'gpt-4o',
                         'api_response_tokens': result.get('usage', {}),
                         'purpose': 'OCR_DLP_performance_testing',

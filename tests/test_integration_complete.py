@@ -5,6 +5,7 @@ Exercise the image search module (Serper) and the GPT-4V labeling workflow.
 """
 
 import asyncio
+from datetime import datetime
 import json
 import os
 import shutil
@@ -245,7 +246,7 @@ class TestIntegrationWorkflow:
             "document_quality": "清晰",
             "_metadata": {
                 "image_path": image_path,
-                "analysis_timestamp": asyncio.get_event_loop().time(),
+                "analysis_timestamp": datetime.utcnow().isoformat(),
                 "model_used": "gpt-4o",
                 "note": "Mock result due to API quota limits",
             },
