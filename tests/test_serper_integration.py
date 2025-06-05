@@ -143,8 +143,8 @@ class TestSerperIntegration:
         
         # Mock the HTTP session
         with patch('aiohttp.ClientSession') as mock_session_class:
-            mock_session = AsyncMock()
-            mock_session.post = AsyncMock(return_value=mock_context_manager)
+            mock_session = MagicMock()
+            mock_session.post.return_value = mock_context_manager
             mock_session.close = AsyncMock()
             mock_session_class.return_value = mock_session
             
@@ -186,8 +186,8 @@ class TestSerperIntegration:
         
         # Mock the HTTP session
         with patch('aiohttp.ClientSession') as mock_session_class:
-            mock_session = AsyncMock()
-            mock_session.post = AsyncMock(return_value=mock_context_manager)
+            mock_session = MagicMock()
+            mock_session.post.return_value = mock_context_manager
             mock_session.close = AsyncMock()
             mock_session_class.return_value = mock_session
             
@@ -246,31 +246,28 @@ class TestSerperIntegration:
         
         # Mock the HTTP session
         with patch('aiohttp.ClientSession') as mock_session_class:
-            mock_session = AsyncMock()
-            mock_session.get = AsyncMock(return_value=mock_context_manager)
+            mock_session = MagicMock()
+            mock_session.get.return_value = mock_context_manager
             mock_session.close = AsyncMock()
             mock_session_class.return_value = mock_session
             
             # Mock file operations to actually write the file
             with patch('aiofiles.open', create=True) as mock_open:
                 # Setup mock file writing that actually creates the file
-                async def mock_write_file(filepath, mode):
-                    # Actually write the file for PIL to read
+                def mock_write_file(filepath, mode):
                     real_path = Path(filepath)
                     real_path.parent.mkdir(parents=True, exist_ok=True)
                     with open(real_path, 'wb') as f:
                         f.write(img_data)
-                    
-                    # Return mock file object
-                    mock_file = AsyncMock()
-                    mock_file.write = AsyncMock()
-                    
-                    # Create async context manager for the file
-                    mock_file_context = AsyncMock()
-                    mock_file_context.__aenter__ = AsyncMock(return_value=mock_file)
-                    mock_file_context.__aexit__ = AsyncMock(return_value=None)
-                    return mock_file_context
-                
+
+                    class DummyFileCM:
+                        async def __aenter__(self_inner):
+                            return AsyncMock()
+                        async def __aexit__(self_inner, exc_type, exc, tb):
+                            pass
+
+                    return DummyFileCM()
+
                 mock_open.side_effect = mock_write_file
                 
                 results = await download_images(test_urls, output_dir=str(tmp_path))
@@ -328,11 +325,11 @@ class TestSerperIntegration:
             mock_context_manager.__aexit__ = AsyncMock(return_value=None)
             
             with patch('aiohttp.ClientSession') as mock_session_class:
-                mock_session = AsyncMock()
+                mock_session = MagicMock()
                 if mock_method == 'post':
-                    mock_session.post = AsyncMock(return_value=mock_context_manager)
+                    mock_session.post.return_value = mock_context_manager
                 else:
-                    mock_session.get = AsyncMock(return_value=mock_context_manager)
+                    mock_session.get.return_value = mock_context_manager
                 mock_session.close = AsyncMock()
                 mock_session_class.return_value = mock_session
                 
