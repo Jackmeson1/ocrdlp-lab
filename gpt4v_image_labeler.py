@@ -45,8 +45,8 @@ class GPT4VImageLabeler:
         except Exception as e:
             return {"error": str(e)}
     
-    async def classify_image(self, image_path: str) -> Dict[str, Any]:
-        """Classify image into fine-grained categories for OCR_DLP testing."""
+    def _classify_image_sync(self, image_path: str) -> Dict[str, Any]:
+        """Synchronously classify an image using the GPT-4V API."""
         
         # Encode image
         base64_image = self.encode_image(image_path)
@@ -109,10 +109,10 @@ class GPT4VImageLabeler:
             "temperature": 0.1
         }
         
-        # Send request using requests wrapped in asyncio.to_thread for non-blocking behaviour
+        # Send request synchronously. The caller may choose to run this in a
+        # thread pool to avoid blocking the event loop.
         try:
-            response = await asyncio.to_thread(
-                requests.post,
+            response = requests.post(
                 self.base_url,
                 headers=self.headers,
                 json=payload,
@@ -196,6 +196,10 @@ class GPT4VImageLabeler:
                     'image_info': self.get_image_info(image_path),
                 },
             }
+
+    async def classify_image(self, image_path: str) -> Dict[str, Any]:
+        """Asynchronously classify an image by running the sync logic in a thread."""
+        return await asyncio.to_thread(self._classify_image_sync, image_path)
 
 
 async def classify_images_batch(image_dir: str, output_file: str = "labels.jsonl"):

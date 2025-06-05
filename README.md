@@ -184,7 +184,27 @@ python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoices -
 
 # Dataset is now ready at ./datasets/invoices/
 # - images/ contains downloaded invoice images
-# - labels/invoice_dataset_labels.jsonl contains comprehensive labels
+    # - labels/invoice_dataset_labels.jsonl contains comprehensive labels
+```
+
+## 🔌 Offline Usage
+
+The unit tests simulate the entire pipeline without making real network calls. This
+is useful when API access is unavailable.
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+To try the CLI with predownloaded images, set dummy API keys and point the
+`download` command at a text file of image URLs:
+
+```bash
+export SERPER_API_KEY=dummy
+export OPENAI_API_KEY=dummy
+ocrdlp download --urls-file sample_urls.txt --output-dir ./offline_demo
+ocrdlp classify ./offline_demo/images --output offline_labels.jsonl
 ```
 
 ## 🛠️ Development

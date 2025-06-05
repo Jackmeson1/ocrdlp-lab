@@ -248,6 +248,26 @@ print(f"Valid classifications: {validation_results['valid_classifications']}")
 🎉 ALL TESTS PASSED - OCR_DLP LABELING SYSTEM READY!
 ```
 
+## 🔌 Offline Usage
+
+You can experiment with the labeling pipeline without network access by running
+the test suite which mocks all HTTP requests:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+To manually run the CLI in a restricted environment, provide local image URLs
+and set placeholder API keys:
+
+```bash
+export SERPER_API_KEY=dummy
+export OPENAI_API_KEY=dummy
+ocrdlp download --urls-file sample_urls.txt --output-dir ./offline_demo
+ocrdlp classify ./offline_demo/images --output offline_labels.jsonl
+```
+
 ### Classification Example
 ```
 📸 Classifying image: invoice.jpg
