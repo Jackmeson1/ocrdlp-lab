@@ -233,3 +233,6 @@ python gpt4v_image_labeler.py ./images invoice_labels.jsonl
 **This is a CRAWLER for DATASET GENERATION, not a model evaluation tool.**
 
 Generated datasets are ready for use in training OCR, DLP, and document classification models. 
+## ⚠️ Image Rights Reminder
+
+When collecting images from search engines or photo sites (Google Images, Unsplash, etc.), verify that you have permission to use and redistribute each image. Check the licensing terms and respect copyright restrictions before sharing any dataset.
