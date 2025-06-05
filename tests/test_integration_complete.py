@@ -18,6 +18,8 @@ from PIL import Image
 # 导入现有模块
 from crawler.search import download_images, search_images
 from gpt4v_analyzer import GPT4VAnalyzer
+from unittest.mock import patch, Mock
+import requests
 
 
 class TestIntegrationWorkflow:
@@ -248,6 +250,36 @@ class TestIntegrationWorkflow:
                 "note": "Mock result due to API quota limits",
             },
         }
+
+
+def test_analyze_invoice_timeout():
+    """GPT4VAnalyzer should report timeout errors."""
+    analyzer = GPT4VAnalyzer("key")
+    with (
+        patch.object(analyzer, "encode_image", return_value="dGVzdA=="),
+        patch.object(analyzer, "get_image_info", return_value={"info": True}),
+        patch("requests.post", side_effect=requests.exceptions.Timeout("t")),
+    ):
+        result = analyzer.analyze_invoice("img.jpg")
+    assert result["error"].startswith("请求异常")
+    assert result["_metadata"]["image_path"] == "img.jpg"
+
+
+def test_analyze_invoice_bad_status():
+    """GPT4VAnalyzer should handle non-200 responses."""
+    analyzer = GPT4VAnalyzer("key")
+    mock_resp = Mock()
+    mock_resp.status_code = 500
+    mock_resp.text = "fail"
+    mock_resp.json.return_value = {}
+    with (
+        patch.object(analyzer, "encode_image", return_value="dGVzdA=="),
+        patch.object(analyzer, "get_image_info", return_value={"info": True}),
+        patch("requests.post", return_value=mock_resp),
+    ):
+        result = analyzer.analyze_invoice("img.jpg")
+    assert result["error"] == "API请求失败: 500"
+    assert result["error_details"] == "fail"
 
 
 # 独立运行的测试函数
