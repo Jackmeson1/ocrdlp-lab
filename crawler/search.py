@@ -2,22 +2,22 @@
 Unified image search interface supporting multiple search engines.
 """
 
-import aiohttp
-import requests
-import os
+import asyncio
 import logging
-from typing import List, Dict, Optional
+import os
 from urllib.parse import urlparse
+
+import requests
 
 
 class ImageSearchEngine:
     """Unified image search engine supporting multiple providers."""
 
-    def __init__(self, session: Optional[aiohttp.ClientSession] = None):
-        self.session = session
+    def __init__(self, session=None):
         self.logger = logging.getLogger(__name__)
+        self.session = session
 
-    async def search_images(self, query: str, engine: str = "serper", limit: int = 100) -> List[str]:
+    async def search_images(self, query: str, engine: str = "serper", limit: int = 100) -> list[str]:
         """
         Unified interface for image search across multiple engines.
 
@@ -30,17 +30,17 @@ class ImageSearchEngine:
             List of image URLs
         """
         if engine == "serper":
-            return await self._search_serper(query, limit)
+            return await asyncio.to_thread(self._search_serper, query, limit)
         elif engine == "serpapi":
-            return await self._search_serpapi(query, limit)
+            return await asyncio.to_thread(self._search_serpapi, query, limit)
         elif engine == "unsplash":
-            return await self._search_unsplash(query, limit)
+            return await asyncio.to_thread(self._search_unsplash, query, limit)
         elif engine == "flickr":
-            return await self._search_flickr(query, limit)
+            return await asyncio.to_thread(self._search_flickr, query, limit)
         else:
             raise ValueError(f"Unsupported search engine: {engine}")
 
-    async def _search_serper(self, query: str, limit: int) -> List[str]:
+    def _search_serper(self, query: str, limit: int) -> list[str]:
         """Search images using Serper.dev API."""
         api_key = os.getenv('SERPER_API_KEY')
         if not api_key:
@@ -57,10 +57,11 @@ class ImageSearchEngine:
             'num': min(limit, 100)
         }
 
-        async with self.session.post(url, headers=headers, json=payload, timeout=10) as response:
-            if response.status != 200:
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=10)
+            if response.status_code != 200:
                 return []
-            data = await response.json()
+            data = response.json()
             images = data.get('images', [])
             urls = []
             for img in images:
@@ -69,8 +70,11 @@ class ImageSearchEngine:
                 elif 'link' in img:
                     urls.append(img['link'])
             return urls[:limit]
+        except Exception as e:
+            self.logger.error(f"Serper search error: {e}")
+            return []
 
-    async def _search_serpapi(self, query: str, limit: int) -> List[str]:
+    def _search_serpapi(self, query: str, limit: int) -> list[str]:
         """Search Google Images via SerpAPI."""
         api_key = os.getenv('SERPAPI_KEY')
         if not api_key:
@@ -87,17 +91,17 @@ class ImageSearchEngine:
                 'safe': 'off'
             }
 
-            async with self.session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    images = data.get('images_results', [])
-                    return [img['original'] for img in images if 'original' in img][:limit]
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                images = data.get('images_results', [])
+                return [img['original'] for img in images if 'original' in img][:limit]
         except Exception as e:
             self.logger.error(f"SerpAPI search error: {e}")
 
         return []
 
-    async def _search_unsplash(self, query: str, limit: int) -> List[str]:
+    def _search_unsplash(self, query: str, limit: int) -> list[str]:
         """Search Unsplash for images."""
         access_key = os.getenv('UNSPLASH_ACCESS_KEY')
         if not access_key:
@@ -105,7 +109,7 @@ class ImageSearchEngine:
             return []
 
         try:
-            url = f"https://api.unsplash.com/search/photos"
+            url = "https://api.unsplash.com/search/photos"
             params = {
                 'query': query,
                 'per_page': min(limit, 30),
@@ -113,16 +117,16 @@ class ImageSearchEngine:
             }
             headers = {'Authorization': f'Client-ID {access_key}'}
 
-            async with self.session.get(url, params=params, headers=headers) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return [photo['urls']['regular'] for photo in data.get('results', [])][:limit]
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                return [photo['urls']['regular'] for photo in data.get('results', [])][:limit]
         except Exception as e:
             self.logger.error(f"Unsplash search error: {e}")
 
         return []
 
-    async def _search_flickr(self, query: str, limit: int) -> List[str]:
+    def _search_flickr(self, query: str, limit: int) -> list[str]:
         """Search Flickr for images."""
         api_key = os.getenv('FLICKR_KEY')
         if not api_key:
@@ -141,20 +145,19 @@ class ImageSearchEngine:
                 'media': 'photos'
             }
 
-            async with self.session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    photos = data.get('photos', {}).get('photo', [])
-                    urls = []
-                    for photo in photos:
-                        # Construct Flickr image URL
-                        farm = photo['farm']
-                        server = photo['server']
-                        photo_id = photo['id']
-                        secret = photo['secret']
-                        url = f"https://farm{farm}.staticflickr.com/{server}/{photo_id}_{secret}_b.jpg"
-                        urls.append(url)
-                    return urls[:limit]
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                photos = data.get('photos', {}).get('photo', [])
+                urls = []
+                for photo in photos:
+                    farm = photo['farm']
+                    server = photo['server']
+                    photo_id = photo['id']
+                    secret = photo['secret']
+                    url = f"https://farm{farm}.staticflickr.com/{server}/{photo_id}_{secret}_b.jpg"
+                    urls.append(url)
+                return urls[:limit]
         except Exception as e:
             self.logger.error(f"Flickr search error: {e}")
 
@@ -162,8 +165,7 @@ class ImageSearchEngine:
 
 
 # Convenience function for direct usage
-async def search_images(query: str, engine: str = "serper", limit: int = 100,
-                       session: Optional[aiohttp.ClientSession] = None) -> List[str]:
+async def search_images(query: str, engine: str = "serper", limit: int = 100) -> list[str]:
     """
     Convenience function for searching images with a unified interface.
 
@@ -171,96 +173,65 @@ async def search_images(query: str, engine: str = "serper", limit: int = 100,
         query: Search query string
         engine: Search engine to use ("serper", "serpapi", "unsplash", "flickr")
         limit: Maximum number of URLs to return
-        session: Optional aiohttp session (will create one if not provided)
 
     Returns:
         List of image URLs
     """
-    close_session = False
-    if session is None:
-        timeout = aiohttp.ClientTimeout(total=30)
-        session = aiohttp.ClientSession(
-            timeout=timeout,
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        )
-        close_session = True
-
-    try:
-        search_engine = ImageSearchEngine(session)
-        return await search_engine.search_images(query, engine, limit)
-    finally:
-        if close_session:
-            await session.close()
+    search_engine = ImageSearchEngine()
+    return await search_engine.search_images(query, engine, limit)
 
 
 # Download function for testing
-async def download_images(urls: List[str], output_dir: str = "test_downloads",
-                         session: Optional[aiohttp.ClientSession] = None) -> Dict[str, str]:
+async def download_images(urls: list[str], output_dir: str = "test_downloads") -> dict[str, str]:
     """
     Download images from URLs for testing purposes.
 
     Args:
         urls: List of image URLs to download
         output_dir: Directory to save images
-        session: Optional aiohttp session
 
     Returns:
         Dictionary mapping URLs to local file paths
     """
-    import aiofiles
     from pathlib import Path
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    close_session = False
-    if session is None:
-        timeout = aiohttp.ClientTimeout(total=30)
-        session = aiohttp.ClientSession(
-            timeout=timeout,
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        )
-        close_session = True
-
     results = {}
     logger = logging.getLogger(__name__)
 
-    try:
-        for i, url in enumerate(urls):
-            try:
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        content = await response.read()
+    for i, url in enumerate(urls):
+        try:
+            response = await asyncio.to_thread(requests.get, url, timeout=30)
+            if response.status_code == 200:
+                content = response.content
 
-                        # Determine file extension
-                        content_type = response.headers.get('content-type', '')
-                        if 'jpeg' in content_type or 'jpg' in content_type:
-                            ext = '.jpg'
-                        elif 'png' in content_type:
-                            ext = '.png'
-                        elif 'webp' in content_type:
-                            ext = '.webp'
-                        else:
-                            # Try to guess from URL
-                            parsed = urlparse(url)
-                            path_ext = os.path.splitext(parsed.path)[1].lower()
-                            ext = path_ext if path_ext in ['.jpg', '.jpeg', '.png', '.webp'] else '.jpg'
+                # Determine file extension
+                content_type = response.headers.get('content-type', '')
+                if 'jpeg' in content_type or 'jpg' in content_type:
+                    ext = '.jpg'
+                elif 'png' in content_type:
+                    ext = '.png'
+                elif 'webp' in content_type:
+                    ext = '.webp'
+                else:
+                    # Try to guess from URL
+                    parsed = urlparse(url)
+                    path_ext = os.path.splitext(parsed.path)[1].lower()
+                    ext = path_ext if path_ext in ['.jpg', '.jpeg', '.png', '.webp'] else '.jpg'
 
-                        filename = f"image_{i:06d}{ext}"
-                        filepath = output_path / filename
+                filename = f"image_{i:06d}{ext}"
+                filepath = output_path / filename
 
-                        # Save image
-                        async with aiofiles.open(filepath, 'wb') as f:
-                            await f.write(content)
+                # Save image
+                await asyncio.to_thread(filepath.write_bytes, content)
 
-                        results[url] = str(filepath)
-                        logger.info(f"Downloaded: {filename}")
-                    else:
-                        logger.warning(f"Failed to download {url}: HTTP {response.status}")
-            except Exception as e:
-                logger.error(f"Error downloading {url}: {e}")
-    finally:
-        if close_session:
-            await session.close()
+                results[url] = str(filepath)
+                logger.info(f"Downloaded: {filename}")
+            else:
+                logger.warning(f"Failed to download {url}: HTTP {response.status_code}")
+        except Exception as e:
+            logger.error(f"Error downloading {url}: {e}")
 
     return results
