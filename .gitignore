@@ -12,6 +12,7 @@ secrets.txt
 # Environment Variables
 .envrc
 .env.*
+!.env.example
 
 # Python
 __pycache__/
