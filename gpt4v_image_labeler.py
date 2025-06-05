@@ -11,6 +11,7 @@ import asyncio
 from pathlib import Path
 from typing import Dict, List, Any
 import requests
+import requests.exceptions
 from PIL import Image
 
 
@@ -171,6 +172,22 @@ class GPT4VImageLabeler:
                     },
                 }
 
+        except requests.exceptions.Timeout:
+            return {
+                'error': 'API request timed out',
+                '_metadata': {
+                    'image_path': image_path,
+                    'image_info': self.get_image_info(image_path),
+                },
+            }
+        except requests.exceptions.RequestException as e:
+            return {
+                'error': f'Network error: {str(e)}',
+                '_metadata': {
+                    'image_path': image_path,
+                    'image_info': self.get_image_info(image_path),
+                },
+            }
         except Exception as e:
             return {
                 'error': f'请求异常: {str(e)}',
