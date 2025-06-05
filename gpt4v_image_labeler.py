@@ -181,7 +181,7 @@ class GPT4VImageLabeler:
                 }
 
 
-async def classify_images_batch(image_dir: str, output_file: str = "image_labels.jsonl"):
+async def classify_images_batch(image_dir: str, output_file: str = "labels.jsonl"):
     """Classify images in batch and save results to JSONL file."""
     
     # Check OpenAI API key
@@ -321,7 +321,7 @@ def generate_classification_summary(results: List[Dict], output_file: str):
     print(f"📊 Summary report saved to: {report_file}")
 
 
-def validate_classification_labels(jsonl_file: str = "image_labels.jsonl"):
+def validate_classification_labels(jsonl_file: str = "labels.jsonl"):
     """Validate classification labels and generate quality report."""
     
     if not os.path.exists(jsonl_file):
@@ -398,11 +398,11 @@ if __name__ == "__main__":
     
     if len(sys.argv) < 2:
         print("Usage: python gpt4v_image_labeler.py <image_directory> [output_file]")
-        print("Example: python gpt4v_image_labeler.py ./images image_labels.jsonl")
+        print("Example: python gpt4v_image_labeler.py ./images labels.jsonl")
         sys.exit(1)
     
     image_dir = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) > 2 else "image_labels.jsonl"
+    output_file = sys.argv[2] if len(sys.argv) > 2 else "labels.jsonl"
     
     # Check API key
     if not os.getenv('OPENAI_API_KEY'):

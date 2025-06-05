@@ -90,7 +90,7 @@ datasets/*/images/*.gif
 *_urls.txt
 search_results.txt
 classification_results.jsonl
-image_labels.jsonl
+labels.jsonl
 
 # Temporary Files
 temp/

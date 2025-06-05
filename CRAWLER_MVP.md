@@ -18,9 +18,10 @@ python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoices -
 ```
 datasets/
 └── invoices/
-    ├── images/              # Downloaded images
-    ├── classifications.jsonl # AI-generated labels
-    └── classifications_summary.md
+    ├── images/                            # Downloaded images
+    └── labels/
+        ├── invoices_labels.jsonl          # AI-generated labels
+        └── invoices_labels_summary.md
 ```
 
 ## Key Features

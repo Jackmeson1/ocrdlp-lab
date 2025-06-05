@@ -11,26 +11,23 @@ This application is a **CRAWLER** that generates **LABELED DATASETS** for downst
 python ocrdlp.py search "invoice documents" --engine serper --limit 100 --output invoice_urls.txt
 
 # Download images to dataset
-python ocrdlp.py download --urls-file invoice_urls.txt --output-dir ./datasets/invoice_images
+python ocrdlp.py download --urls-file invoice_urls.txt --output-dir ./datasets/invoice_dataset/images
 ```
 
 ### Step 2: Generate Labels (AI Labeling)
 ```bash
 # Create dataset structure
-mkdir datasets/invoice_dataset/images
-mkdir datasets/invoice_dataset/labels
-
-# Copy images to dataset
-copy datasets/invoice_images/*.* datasets/invoice_dataset/images/
+mkdir -p datasets/invoice_dataset/images
+mkdir -p datasets/invoice_dataset/labels
 
 # Generate comprehensive labels
-python ocrdlp.py classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/labels.jsonl
+python ocrdlp.py classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/invoice_dataset_labels.jsonl
 ```
 
 ### Step 3: Package Dataset for Downstream Use
 ```bash
 # Validate dataset quality
-python ocrdlp.py validate datasets/invoice_dataset/labels/labels.jsonl
+python ocrdlp.py validate datasets/invoice_dataset/labels/invoice_dataset_labels.jsonl
 
 # Dataset is now ready for model training
 ```
@@ -44,8 +41,8 @@ datasets/
     │   ├── image_002.png
     │   └── ...
     ├── labels/              # AI-generated labels
-    │   ├── labels.jsonl     # Comprehensive labels
-    │   └── summary.md       # Dataset statistics
+    │   ├── invoice_dataset_labels.jsonl     # Comprehensive labels
+    │   └── invoice_dataset_labels_summary.md       # Dataset statistics
     └── README.md            # Usage instructions
 ```
 

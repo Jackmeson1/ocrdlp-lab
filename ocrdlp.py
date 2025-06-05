@@ -77,9 +77,12 @@ class OCRDLPCli:
         """Download images from URLs or search results"""
         print(f"📥 Downloading images to: {args.output_dir}")
         
-        # Create output directory
+        # Create output directory structure
         output_dir = Path(args.output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        images_dir = output_dir / "images"
+        labels_dir = output_dir / "labels"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        labels_dir.mkdir(parents=True, exist_ok=True)
         
         urls = []
         
@@ -165,9 +168,13 @@ class OCRDLPCli:
         """Run complete pipeline: search -> download -> classify"""
         print(f"🚀 Running complete pipeline for: '{args.query}'")
         
-        # Create output directory
+        # Create output directory structure
         output_dir = Path(args.output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        images_dir = output_dir / "images"
+        labels_dir = output_dir / "labels"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        labels_dir.mkdir(parents=True, exist_ok=True)
+        dataset_name = output_dir.name
         
         try:
             # Step 1: Search
@@ -186,7 +193,7 @@ class OCRDLPCli:
             
             # Step 2: Download
             print(f"\n📥 Step 2: Downloading images...")
-            results = await download_images(urls, output_dir=str(output_dir))
+            results = await download_images(urls, output_dir=str(images_dir))
             
             if not results:
                 print("❌ No images downloaded")
@@ -196,10 +203,11 @@ class OCRDLPCli:
             
             # Step 3: Classify
             print(f"\n🤖 Step 3: Classifying images...")
-            output_file = output_dir / "classifications.jsonl"
+
+            output_file = labels_dir / f"{dataset_name}_labels.jsonl"
             
             classification_results = await classify_images_batch(
-                image_dir=str(output_dir),
+                image_dir=str(images_dir),
                 output_file=str(output_file)
             )
             
@@ -267,13 +275,13 @@ Examples:
   ocrdlp download --query "invoice document" --output-dir ./images --limit 5
   
   # Classify images
-  ocrdlp classify ./images --output classifications.jsonl --validate
+  ocrdlp classify ./images --output labels.jsonl --validate
   
   # Run complete pipeline
   ocrdlp pipeline "indian passport" --output-dir ./passport_data --limit 20
   
   # Validate results
-  ocrdlp validate classifications.jsonl
+  ocrdlp validate labels.jsonl
             """
         )
         
@@ -300,7 +308,7 @@ Examples:
         # Classify command
         classify_parser = subparsers.add_parser('classify', help='Classify images')
         classify_parser.add_argument('input_dir', help='Directory containing images to classify')
-        classify_parser.add_argument('--output', default='classifications.jsonl', help='Output JSONL file')
+        classify_parser.add_argument('--output', default='labels.jsonl', help='Output JSONL file')
         classify_parser.add_argument('--validate', action='store_true', help='Validate results after classification')
         
         # Pipeline command
