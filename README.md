@@ -68,29 +68,25 @@ python ocrdlp.py search "invoice documents" --engine serper --limit 100 --output
 ### 2. Download Images
 
 ```bash
-# Download images to create dataset
-python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/raw_images
+# Download images directly into the dataset
+python ocrdlp.py download --urls-file urls.txt --output-dir ./datasets/invoice_dataset/images
 ```
 
 ### 3. Generate Dataset with Labels
 
 ```bash
-# Create dataset structure
-mkdir datasets/invoice_dataset/images
-mkdir datasets/invoice_dataset/labels
-
-# Copy images to dataset
-copy datasets/raw_images/*.* datasets/invoice_dataset/images/
+# Create label directory
+mkdir -p datasets/invoice_dataset/labels
 
 # Generate comprehensive labels
-python ocrdlp.py classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/labels.jsonl
+python ocrdlp.py classify datasets/invoice_dataset/images --output datasets/invoice_dataset/labels/invoice_dataset_labels.jsonl
 ```
 
 ### 4. Validate Dataset Quality
 
 ```bash
 # Validate generated dataset
-python ocrdlp.py validate datasets/invoice_dataset/labels/labels.jsonl
+python ocrdlp.py validate datasets/invoice_dataset/labels/invoice_dataset_labels.jsonl
 ```
 
 ## 🏗️ Generated Dataset Structure
@@ -103,8 +99,8 @@ datasets/
     │   ├── image_002.png
     │   └── ...
     ├── labels/              # AI-generated labels
-    │   ├── labels.jsonl     # Comprehensive labels
-    │   └── summary.md       # Dataset statistics
+    │   ├── <dataset>_labels.jsonl     # Comprehensive labels
+    │   └── <dataset>_labels_summary.md       # Dataset statistics
     └── README.md            # Usage instructions for ML engineers
 ```
 
@@ -125,7 +121,7 @@ Each image gets comprehensive labels for multiple downstream use cases:
 import json
 
 def load_ocr_dataset(dataset_path):
-    labels_path = f"{dataset_path}/labels/labels.jsonl"
+    labels_path = f"{dataset_path}/labels/<dataset>_labels.jsonl"
     with open(labels_path, 'r') as f:
         labels = [json.loads(line) for line in f]
     
@@ -140,7 +136,7 @@ def load_ocr_dataset(dataset_path):
 ### DLP Model Training
 ```python
 def load_dlp_dataset(dataset_path):
-    labels_path = f"{dataset_path}/labels/labels.jsonl"
+    labels_path = f"{dataset_path}/labels/<dataset>_labels.jsonl"
     with open(labels_path, 'r') as f:
         labels = [json.loads(line) for line in f]
     
@@ -167,7 +163,7 @@ python ocrdlp.py download --query "invoice" --output-dir ./images --limit 20
 
 ### Classify Command
 ```bash
-python ocrdlp.py classify ./images --output labels.jsonl --validate
+python ocrdlp.py classify ./images --output invoice_labels.jsonl --validate
 ```
 
 ### Pipeline Command (Complete Workflow)
@@ -177,7 +173,7 @@ python ocrdlp.py pipeline "invoice documents" --output-dir ./invoice_dataset --l
 
 ### Validate Command
 ```bash
-python ocrdlp.py validate labels.jsonl
+python ocrdlp.py validate invoice_labels.jsonl
 ```
 
 ## 🎉 Example: Creating Invoice Dataset
@@ -188,7 +184,7 @@ python ocrdlp.py pipeline "invoice documents" --output-dir ./datasets/invoices -
 
 # Dataset is now ready at ./datasets/invoices/
 # - images/ contains downloaded invoice images
-# - classifications.jsonl contains comprehensive labels
+# - labels/invoice_dataset_labels.jsonl contains comprehensive labels
 ```
 
 ## 🛠️ Development
@@ -201,7 +197,7 @@ python test_image_labeling.py
 
 ### Direct Labeling (Alternative)
 ```bash
-python gpt4v_image_labeler.py ./images output_labels.jsonl
+python gpt4v_image_labeler.py ./images invoice_labels.jsonl
 ```
 
 ## 📈 Key Benefits

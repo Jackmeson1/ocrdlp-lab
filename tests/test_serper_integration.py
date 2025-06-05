@@ -8,9 +8,11 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from PIL import Image
 
 from crawler.search import download_images, search_images
@@ -136,6 +138,7 @@ class TestSerperIntegration:
             ]
         }
 
+
         # Create a proper async context manager mock
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -149,6 +152,7 @@ class TestSerperIntegration:
             # Mock environment variable
             with patch.dict(os.environ, {'SERPER_API_KEY': 'test_key'}):
                 urls = await search_images(query, engine="serper", limit=10)
+
 
         # Should return the mocked URLs
         assert isinstance(urls, list)
@@ -174,6 +178,7 @@ class TestSerperIntegration:
         query = "test query"
 
         # Mock API error response
+
         mock_response = AsyncMock()
         mock_response.status = 429  # Rate limit error
 
@@ -186,6 +191,7 @@ class TestSerperIntegration:
             # Mock environment variable
             with patch.dict(os.environ, {'SERPER_API_KEY': 'test_key'}):
                 urls = await search_images(query, engine="serper", limit=10)
+
 
         # Should return empty list on error
         assert isinstance(urls, list)
@@ -301,6 +307,7 @@ class TestSerperIntegration:
         engines = ["serper", "serpapi", "unsplash", "flickr"]
 
         for engine in engines:
+
             # Mock successful response for each engine
             mock_response = AsyncMock()
             mock_response.status = 200
@@ -310,8 +317,11 @@ class TestSerperIntegration:
                     return_value={'images': [{'imageUrl': 'http://test.com/1.jpg'}]}
                 )
                 mock_method = 'post'
+
             else:
-                mock_response.json = AsyncMock(return_value={})
+                mock_response = AsyncMock()
+                mock_response.status = 200
+
                 mock_method = 'get'
 
             # Create async context manager
@@ -348,6 +358,7 @@ class TestSerperIntegration:
 
                 # Should return a list (content depends on mocked response)
                 assert isinstance(urls, list)
+
 
     def test_invalid_engine_raises_error(self):
         """

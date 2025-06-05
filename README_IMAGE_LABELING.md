@@ -54,7 +54,7 @@ python demo_labeling_vs_extraction.py
 
 ### 4. Batch Classification
 ```bash
-python gpt4v_image_labeler.py ./images output_labels.jsonl
+python gpt4v_image_labeler.py datasets/invoice_dataset/images invoice_dataset_labels.jsonl
 ```
 
 ## 📋 Classification Schema
@@ -128,7 +128,7 @@ from gpt4v_image_labeler import classify_images_batch
 
 results = await classify_images_batch(
     image_dir="./dataset_images",
-    output_file="labels.jsonl"
+    output_file="invoice_dataset_labels.jsonl"
 )
 ```
 
@@ -136,7 +136,7 @@ results = await classify_images_batch(
 ```python
 from gpt4v_image_labeler import validate_classification_labels
 
-validation_results = validate_classification_labels("labels.jsonl")
+validation_results = validate_classification_labels("invoice_dataset_labels.jsonl")
 print(f"Valid classifications: {validation_results['valid_classifications']}")
 ```
 

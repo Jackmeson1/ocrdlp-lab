@@ -1,27 +1,33 @@
 # Invoice Dataset for OCR/DLP Model Training
 
 ## Dataset Overview
-This dataset was generated using the OCR_DLP Image Labeling System crawler application. It contains invoice images with comprehensive labels for training OCR and DLP models.
+This dataset was generated using the OCR_DLP Image Labeling System crawler application. The original images and full `invoice_labels.jsonl` file have been removed from this repository to keep its size small. Only a summary of the labels remains.
 
 ## Dataset Structure
 ```
 invoice_dataset/
+
 ├── images/                 # Source images
 │   ├── image_000000.jpg   # GST Invoice
 │   ├── image_000001.webp  # Commercial Invoice  
 │   └── image_000002.jpg   # Commercial Invoice
 ├── labels/                # Generated labels
-│   ├── invoice_labels.jsonl      # Detailed classification labels
-│   └── invoice_labels_summary.md # Dataset statistics
+│   ├── invoice_dataset_labels.jsonl      # Detailed classification labels
+│   └── invoice_dataset_labels_summary.md # Dataset statistics
 └── README.md              # This file
+
 ```
 
+The three example invoice images used to generate this dataset have been moved to
+the repository's `invoice_images/` directory. The original `invoice_labels.jsonl`
+file has been removed; only a brief summary remains in `invoice_labels_summary.md`.
+
 ## Dataset Statistics
-- **Total Images**: 3
+- **Total Images**: 3 (removed from repository)
 - **Document Types**: Invoices (GST, Commercial)
 - **Languages**: English
 - **Image Formats**: JPG, WebP
-- **Label Format**: JSONL
+- **Label Format**: JSONL (file removed)
 
 ## Label Schema
 Each image has comprehensive labels including:
@@ -44,7 +50,7 @@ import json
 
 def load_ocr_dataset(dataset_path):
     images_path = f"{dataset_path}/images"
-    labels_path = f"{dataset_path}/labels/invoice_labels.jsonl"
+    labels_path = f"{dataset_path}/labels/invoice_dataset_labels.jsonl"
     
     with open(labels_path, 'r') as f:
         labels = [json.loads(line) for line in f]
@@ -66,7 +72,7 @@ def load_ocr_dataset(dataset_path):
 ```python
 # Load dataset for DLP training
 def load_dlp_dataset(dataset_path):
-    labels_path = f"{dataset_path}/labels/invoice_labels.jsonl"
+    labels_path = f"{dataset_path}/labels/invoice_dataset_labels.jsonl"
     
     with open(labels_path, 'r') as f:
         labels = [json.loads(line) for line in f]
@@ -88,7 +94,7 @@ def load_dlp_dataset(dataset_path):
 ```python
 # Load dataset for document classification
 def load_classification_dataset(dataset_path):
-    labels_path = f"{dataset_path}/labels/invoice_labels.jsonl"
+    labels_path = f"{dataset_path}/labels/invoice_dataset_labels.jsonl"
     
     with open(labels_path, 'r') as f:
         labels = [json.loads(line) for line in f]
