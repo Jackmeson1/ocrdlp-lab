@@ -1,5 +1,7 @@
 # OCR_DLP Image Crawler - MVP
 
+> This guide covers GPT-4V based image labeling for OCR / DLP.
+
 ## Purpose
 **CRAWLER APPLICATION** for generating **LABELED DATASETS** for downstream model training.
 
