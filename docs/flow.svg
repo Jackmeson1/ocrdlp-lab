@@ -1,1 +1,173 @@
-<!-- TODO: add workflow diagram: crawl -> label -> train -->
+<?xml version="1.0" encoding="utf-8"?>
+<svg baseProfile="full" height="480px" version="1.1" width="1200px" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="searchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6C63FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5A52E0;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="downloadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00BFA5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00A693;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="labelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EE5A55;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="validateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ECDC4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#44B3AB;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="trainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD93D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F4C430;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Shadow filter -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="2" dy="4" result="offsetblur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.15"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Arrow marker -->
+    <marker id="arrow" markerHeight="12" markerWidth="12" orient="auto" refX="12" refY="6">
+      <path d="M 0 0 L 12 6 L 0 12 L 3 6 z" fill="#495057" />
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="480" fill="#F8F9FA"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#2C3E50">
+    OCR-DLP Dataset Generation Pipeline
+  </text>
+  
+  <!-- Search Phase -->
+  <g transform="translate(50, 120)">
+    <rect width="200" height="100" rx="15" ry="15" fill="url(#searchGrad)" filter="url(#shadow)"/>
+    <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="white">
+      Search Images
+    </text>
+    <text x="100" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.9)">
+      Multi-Engine Search
+    </text>
+    <text x="100" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.7)">
+      Serper, Google, Bing
+    </text>
+  </g>
+  
+  <!-- Arrow 1 -->
+  <line x1="260" y1="170" x2="320" y2="170" stroke="#495057" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="290" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">URLs</text>
+  
+  <!-- Download Phase -->
+  <g transform="translate(330, 120)">
+    <rect width="200" height="100" rx="15" ry="15" fill="url(#downloadGrad)" filter="url(#shadow)"/>
+    <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="white">
+      Download Images
+    </text>
+    <text x="100" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.9)">
+      Robust Downloader
+    </text>
+    <text x="100" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.7)">
+      Validation & Retry
+    </text>
+  </g>
+  
+  <!-- Arrow 2 -->
+  <line x1="540" y1="170" x2="600" y2="170" stroke="#495057" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="570" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">Images</text>
+  
+  <!-- Label Phase -->
+  <g transform="translate(610, 120)">
+    <rect width="200" height="100" rx="15" ry="15" fill="url(#labelGrad)" filter="url(#shadow)"/>
+    <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="white">
+      AI Labeling
+    </text>
+    <text x="100" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.9)">
+      GPT-4V Analysis
+    </text>
+    <text x="100" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.7)">
+      Multi-Purpose Labels
+    </text>
+  </g>
+  
+  <!-- Arrow 3 -->
+  <line x1="820" y1="170" x2="880" y2="170" stroke="#495057" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="850" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">JSONL</text>
+  
+  <!-- Validate Phase -->
+  <g transform="translate(890, 120)">
+    <rect width="200" height="100" rx="15" ry="15" fill="url(#validateGrad)" filter="url(#shadow)"/>
+    <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="white">
+      Validate Dataset
+    </text>
+    <text x="100" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.9)">
+      Quality Checks
+    </text>
+    <text x="100" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.7)">
+      Completeness Test
+    </text>
+  </g>
+  
+  <!-- Dataset Structure -->
+  <g transform="translate(300, 280)">
+    <rect width="600" height="140" rx="10" ry="10" fill="#E9ECEF" stroke="#ADB5BD" stroke-width="2" stroke-dasharray="5,5"/>
+    <text x="300" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#495057">
+      Generated Dataset Structure
+    </text>
+    
+    <!-- Folder structure -->
+    <g transform="translate(40, 50)">
+      <text x="0" y="0" font-family="monospace" font-size="14" fill="#495057">datasets/</text>
+      <text x="20" y="20" font-family="monospace" font-size="14" fill="#495057">└── invoice_dataset/</text>
+      <text x="60" y="40" font-family="monospace" font-size="14" fill="#495057">├── images/</text>
+      <text x="60" y="60" font-family="monospace" font-size="14" fill="#495057">└── labels/</text>
+    </g>
+    
+    <!-- Label details -->
+    <g transform="translate(300, 50)">
+      <text x="0" y="0" font-family="Arial, sans-serif" font-size="13" fill="#6C757D">• Document Classification</text>
+      <text x="0" y="20" font-family="Arial, sans-serif" font-size="13" fill="#6C757D">• OCR Difficulty Score</text>
+      <text x="0" y="40" font-family="Arial, sans-serif" font-size="13" fill="#6C757D">• DLP Sensitive Data Types</text>
+      <text x="0" y="60" font-family="Arial, sans-serif" font-size="13" fill="#6C757D">• Processing Recommendations</text>
+    </g>
+  </g>
+  
+  <!-- Arrow to training -->
+  <line x1="600" y1="430" x2="600" y2="380" stroke="#495057" stroke-width="3" stroke-dasharray="8,4"/>
+  <path d="M 600 380 L 595 390 L 605 390 z" fill="#495057"/>
+  
+  <!-- Model Training (bottom) -->
+  <g transform="translate(150, 380)">
+    <rect width="900" height="60" rx="30" ry="30" fill="url(#trainGrad)" filter="url(#shadow)"/>
+    <text x="450" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="600" fill="#333">
+      Downstream Model Training: OCR | DLP | Document Classification
+    </text>
+  </g>
+  
+  <!-- CLI Commands -->
+  <g transform="translate(50, 240)">
+    <text x="0" y="0" font-family="monospace" font-size="11" fill="#6C757D">python ocrdlp.py search</text>
+  </g>
+  <g transform="translate(330, 240)">
+    <text x="0" y="0" font-family="monospace" font-size="11" fill="#6C757D">python ocrdlp.py download</text>
+  </g>
+  <g transform="translate(610, 240)">
+    <text x="0" y="0" font-family="monospace" font-size="11" fill="#6C757D">python ocrdlp.py classify</text>
+  </g>
+  <g transform="translate(890, 240)">
+    <text x="0" y="0" font-family="monospace" font-size="11" fill="#6C757D">python ocrdlp.py validate</text>
+  </g>
+</svg>
