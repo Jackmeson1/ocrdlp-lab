@@ -1,5 +1,7 @@
 # Image Labeling System for OCR_DLP Dataset
 
+> This guide covers GPT-4V based image labeling for OCR / DLP.
+
 ## Overview
 
 This system provides **image classification and labeling** functionality specifically designed for **OCR_DLP (Optical Character Recognition - Data Loss Prevention) system testing**. Unlike content extraction, this system focuses on categorizing and labeling images to create fine-grained datasets for performance evaluation.

@@ -1,6 +1,31 @@
-# OCR_DLP Image Crawler & Dataset Generator
+# OCR-DLP Image Crawler & Dataset Generator
 
-A comprehensive CLI application for **crawling images** and **generating labeled datasets** for OCR (Optical Character Recognition) and DLP (Data Loss Prevention) model training.
+*Create production-ready, GPT-4V-labeled datasets for **OCR** and **Data-Loss-Prevention** models in **3 minutes**.*
+
+![Workflow: crawl→label→train](docs/flow.svg)
+
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Jackmeson1/ocrdlp-lab/ci.yml?branch=main)](https://github.com/Jackmeson1/ocrdlp-lab/actions)
+
+## 🚀 Quick Start
+
+```bash
+# 1 Install
+git clone https://github.com/Jackmeson1/ocrdlp-lab && cd ocrdlp-lab
+pip install -r requirements.txt          # Python 3.8+
+
+# 2 Set API keys
+export SERPER_API_KEY=...
+export OPENAI_API_KEY=...
+
+# 3 One-shot pipeline demo
+python ocrdlp.py pipeline "invoice document" \
+       --output-dir ./datasets/invoices --limit 50
+open datasets/invoices/labels/invoice_dataset_labels.jsonl
+```
+
+<sub>Need details? Jump to [Configuration](#configuration) • [CLI Commands](#cli-commands)</sub>
 
 ## 🎯 Purpose
 
